@@ -6,7 +6,7 @@ from random import randint
 from re import findall
 from youtube_search import YoutubeSearch
 
-app.add_static_files("/static", "files")
+app.add_static_files("/files", "files")
 
 lds = jf.load('files/leads.json')
 if lds: 
@@ -33,7 +33,8 @@ def params_needed():
     print(f'st: {st}')
     if isinstance(st,list):
         prm = st
-        st = str(st.pop(0))
+        if st: st = str(st.pop(0))
+        else: st = ''
         if verbose: print(f'PARAMETERS: {prm}')
     else:
         prm = False
@@ -235,10 +236,25 @@ def main_page():
     else:
         results = False
 
+    ui.add_css('''
+        @layer utilities{
+            .disable-scrollbars::-webkit-scrollbar {
+                background: transparent; /* Chrome/Safari/Webkit */
+                width: 0px;
+               display: none;
+            }
+    
+            .disable-scrollbars {
+                scrollbar-width: none !important; /* Firefox */
+                -ms-overflow-style: none !important;  /* IE 10+ */
+            }
+        }
+    ''')
+
     with ui.header().classes(replace='row items-center').style('gap: 5px') as header:
         ui.button(on_click=lambda: left_drawer.toggle(), icon='menu').props('flat color=white')
         # ui.label('YouTube Recycle Bin')
-        ui.image('/static/files/YTRB_logo.png').style('max-width: 100px')
+        ui.image('/files/YTRB_logo_beta.png').style('max-width: 100px')
         with ui.button(on_click=lambda: randomize(), icon='casino').props('flat color=white'):
             ui.tooltip('Randomize').props('delay="1000"')
         with ui.button(icon='lock', on_click=lambda: lock_cat(cat_lock_btn)).props('flat color=white') as cat_lock_btn:
@@ -248,7 +264,7 @@ def main_page():
         lead_select()
         params_needed()
         ui.space()
-        with ui.number(value=lvt,precision=0,min=0,on_change=lambda:search_youtube.refresh).bind_value(globals(),'lvt').classes('max-w-15'):
+        with ui.number(value=lvt,precision=0,min=0,on_change=lambda:search_youtube.refresh).bind_value(globals(),'lvt').classes('max-w-15 disable-scrollbars'):
             ui.tooltip('Max Viewcount').props('delay="1000"')
         with ui.button(icon='search',on_click=lambda:search_youtube()).props('flat color=white'):
             ui.tooltip('Search').props('delay="1000"')
