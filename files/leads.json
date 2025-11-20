@@ -41,6 +41,7 @@
         "MVI":"MVI ####",
         "MOV (Camera)":"MOV ####",
         "100 (Camera)":"100 ####",
+        "100_ (Camera)":"100_####",
         "SAM (Camera)":"SAM ####",
         "DSC (Camera)":"DSC ####",
         "SDV (Camera)":"SDV ####",

@@ -5,6 +5,9 @@ import rand_gens as rg
 from random import randint
 from re import findall
 from youtube_search import YoutubeSearch
+import asyncio
+
+print('*'*40+'\nSTARTING APPLICATION...\n'+'*'*40)
 
 app.add_static_files("/files", "files")
 
@@ -16,25 +19,31 @@ else: sys.exit()
 cats = lds.keys()
 cat = 'old'
 ld = 'IMG'
-st = ""
-lvt = 100
+st = ''
+lvt = 0
+date_eval = False
+time_eval = False
 max_results=300
+enable_try_again = True
 cat_lock = True
 lead_lock = False
 verbose = True
 # results = jf.load('files/lv_result.json')
 # print(f'Loaded {len(results)} videos...')
 
+
 @ui.refreshable
 def params_needed():
-    global st, date_picker
-    print("Refreshing params...")
+    global st, date_picker, date_eval, time_picker, time_eval
+    date_eval, time_eval = False, False
+    print('-'*40)
+    print("REFRESHING PARAMETERS...")
     st = cat_lds[ld]
-    print(f'st: {st}')
+    print(f'RAW SEARCH TERM: {st}')
     if isinstance(st,list):
         prm = st
-        if st: st = str(st.pop(0))
-        else: st = ''
+        if st: st = st.pop(0) 
+        else: st = cat_lds[ld]
         if verbose: print(f'PARAMETERS: {prm}')
     else:
         prm = False
@@ -46,7 +55,7 @@ def params_needed():
                 rn = str(randint(prm[n][0],prm[n][1])).zfill(len(str(prm[n][1])))
             else:
                 rn = rg.rNd(len(num_eval[n]))
-            ui.number(value=rn).classes('max-w-15')
+            ui.number(value=rn).classes('max-w-15').set_enabled(False)
             if verbose: print(f'RANDOM NUMBER FOR {num_eval[n]}: {rn}')
             st = st.replace(num_eval[n],str(rn))
     
@@ -55,17 +64,19 @@ def params_needed():
         rh = rg.rNh(len(hex_eval[0]))
         ui.input(value=rh).classes('max-w-15')
         if verbose: print(f'RANDOM HEX FOR {hex_eval[0]}: {rh}')
-        st = st.replace(str(hex_eval[0]),str(rh))
+        st = st.replace(str(hex_eval[0]),str(rh))    
 
-    if prm:
+    year_eval = findall(r'Y{2,}',st)
+
+    if prm and year_eval:
         rd_dt = rg.random_date(prm[0],"today")
     elif cat == "low":
         rd_dt = rg.random_date("youtube",2008)
     else:
         rd_dt = rg.random_date("youtube","today")
 
-    year_eval = findall(r'Y{2,}',st)
     if year_eval:
+        date_eval = True
         rd_y = rd_dt.year
         if verbose: print(f'RANDOM YEAR FOR {year_eval[0]}: {rd_y}')
         st = st.replace(str(year_eval[0]),str(rd_y))
@@ -74,6 +85,7 @@ def params_needed():
 
     month_eval = findall(r'M{2}',st)
     if month_eval:
+        date_eval = True
         rd_m = str(rd_dt.month).zfill(len(month_eval[0]))
         if verbose: print(f'RANDOM MONTH FOR {month_eval[0]}: {rd_m}')
         st = st.replace(str(month_eval[0]),str(rd_m))
@@ -82,6 +94,7 @@ def params_needed():
 
     Mmonth_eval = findall(r'Month',st)
     if Mmonth_eval:
+        date_eval = True
         rd_mm = rd_dt.strftime("%B")
         if verbose: print(f'RANDOM MONTH NAME FOR {Mmonth_eval[0]}: {rd_mm}')
         st = st.replace(str(Mmonth_eval[0]),str(rd_mm))
@@ -90,25 +103,58 @@ def params_needed():
 
     day_eval = findall(r'D{2}',st)
     if day_eval:
+        date_eval = True
         rd_d = str(rd_dt.day).zfill(len(day_eval[0]))
         if verbose: print(f'RANDOM DAY FOR {day_eval[0]}: {rd_d}')
         st = st.replace(str(day_eval[0]),str(rd_d))
     else:
         rd_d = '23'
 
-    if day_eval or month_eval or Mmonth_eval or year_eval:
+    hour_eval = findall(r'H{2}',st)
+    if hour_eval:
+        time_eval = True
+        rd_h = str(rd_dt.hour).zfill(len(hour_eval[0]))
+        if verbose: print(f'RANDOM HOUR FOR {hour_eval[0]}: {rd_h}')
+        st = st.replace(str(hour_eval[0]),str(rd_h))
+    else:
+        rd_h = '10'
+
+    minute_eval = findall(r'(?:Mi){2}',st)
+    if minute_eval:
+        time_eval = True
+        rd_mi = str(rd_dt.minute).zfill(int(len(minute_eval[0])/2))
+        if verbose: print(f'RANDOM MINUTE FOR {minute_eval[0]}: {rd_mi}')
+        st = st.replace(str(minute_eval[0]),str(rd_mi))
+    else:
+        rd_mi = '27'
+
+    second_eval = findall(r'S{2}',st)
+    if second_eval:
+        time_eval = True
+        rd_s = str(rd_dt.second).zfill(len(second_eval[0]))
+        if verbose: print(f'RANDOM SECOND FOR {second_eval[0]}: {rd_s}')
+        st = st.replace(str(second_eval[0]),str(rd_s))
+    else:
+        rd_s = str(randint(0,59)).zfill(2)
+
+    if date_eval:
         if Mmonth_eval: rd_m=rd_dt.strftime("%m")
-        date_picker = str(rd_y)+'-'+str(rd_m)+'-'+str(rd_d)
-        ui.date_input(value=date_picker).bind_value(globals(),'date_picker')
+        date_picker = f'{str(rd_y)}-{str(rd_m)}-{str(rd_d)}'
+        ui.date_input(value=date_picker).bind_value(globals(),'date_picker').classes('max-w-32').set_enabled(False)
+
+    if time_eval:
+        time_picker = f'{str(rd_h)}:{str(rd_mi)}'
+        ui.time_input(value=time_picker).bind_value(globals(),'time_picker').classes('max-w-32').set_enabled(False)
     
-    print(f'Search term: {st}')
+    print(f'NEW SEARCH TERM: {st}')
 
 @ui.refreshable
 def lead_select():
-    global cat_lds, cat_key, ld
+    global cat_lds, cat_key, ld, enable_try_again
+    enable_try_again = True
     cat_lds = lds[cat]
     cat_key = cat_lds.keys()
-    if ld not in list(cat_key):
+    if not ld or ld not in list(cat_key):
         ld = rg.random_choice(cat_lds)
     with ui.button(icon='lock_open', on_click=lambda: lock_lead(lead_lock_btn)).props('flat color=white') as lead_lock_btn:
         ui.tooltip('Lock Lead').props('delay="1000"')
@@ -116,10 +162,11 @@ def lead_select():
         ui.tooltip('Lead').props('delay="1000"')
 
 def randomize():
-    global cat, ld, lead_lock
+    global cat, ld, lead_lock, enable_try_again
+    enable_try_again = True
+    print('?'*40+'\nRANDOMIZING...')
     if not cat_lock:
         lead_lock = False
-        print('Randomizing...')
         cat = list(cats)[(randint(0,len(list(cats))-1))]
         print(f'New cat: {cat}...')
         ld = rg.random_choice(cat_lds)
@@ -130,10 +177,9 @@ def randomize():
             ld = rg.random_choice(cat_lds)
             print(f'Choosing lead from \'{cat}\': \"{ld}\"...')
             lead_select.refresh()
-    params_needed.refresh()
+    # params_needed.refresh()
 
-@ui.refreshable
-def search_youtube():
+async def search_youtube(num_results=max_results):
     global results, lv_results, st, lvt, app
     s_term = st
     if cat == "new":
@@ -145,9 +191,11 @@ def search_youtube():
 
     # url = f'https://www.youtube.com/results?search_query={s_term}{s_filter}'
 
-    results = YoutubeSearch(s_term, max_results).to_dict()
+    print('%'*40)
+    print('SEARCHING YOUTUBE...')
+    results = YoutubeSearch(s_term, num_results).to_dict()
     lv_results = []
-
+    print(f'Found {len(results)} videos matching \'{s_term}\'...')
     for result in results:
         rt = result['title']
         rv = result['views']
@@ -165,8 +213,8 @@ def search_youtube():
         print(f'Views:\t\t{rv}')
         print(f'Uploaded:\t{ru}')
 
-    print(f'Found {len(results)} videos matching \'{s_term}\'...')
     print(f'Found {len(lv_results)} videos with less than {lvt} views...')
+    print('-'*40)
 
     results = lv_results
     # app.storage.browser['results'] = results
@@ -177,6 +225,17 @@ def search_youtube():
     # results = jf.load('files/lv_result.json')
     # print(f'Loaded {len(results)} videos...')
     load_cards.refresh()
+    searched_term.refresh()
+
+async def try_again():
+    global enable_try_again
+    more_results = 0
+    enable_try_again = False
+    load_cards.refresh()
+    while not results and more_results<5000-(max_results):
+        more_results += 300
+        print(f"Setting max results to {max_results+more_results}...")
+        await search_youtube(max_results+more_results)
 
 @ui.refreshable
 def load_cards():
@@ -185,6 +244,8 @@ def load_cards():
             if result['thumbnails']:
                 tmb = result['thumbnails'][0]
             ti = result['title']
+            if len(ti) > 64:
+                ti = ti[:61] + "..."
             ds = result['long_desc']
             ch = result['channel']
             vw = result['views']
@@ -210,6 +271,15 @@ def load_cards():
             with ui.column().classes('justify-self-center'):
                 ui.space()
                 ui.label('Nothing here...').style('color: gray')
+                try_btn = ui.button('Try Again',on_click=lambda: try_again()).set_enabled(enable_try_again)
+
+@ui.refreshable
+def searched_term():
+    if results:
+        with ui.row().classes(replace='row items-center w-[100%] no-wrap').style('background-color: black; margin: 0; padding: 0; display: flex;'):
+            info = f'Found {len(lv_results)} videos matching {st} with less than {int(lvt)} views...'
+            info = info.replace('less than 0','no')
+            ui.label(info)
 
 def toggle_icon_button(button_element):
     if button_element.icon == 'lock_open':
@@ -230,7 +300,7 @@ def lock_lead(button_element):
 @ui.page('/')
 def main_page():
     global results
-    print(app.storage.browser)
+    # print(app.storage.browser)
     if 'results' in app.storage.browser:
         results = app.storage.browser['results']
     else:
@@ -264,7 +334,7 @@ def main_page():
         lead_select()
         params_needed()
         ui.space()
-        with ui.number(value=lvt,precision=0,min=0,on_change=lambda:search_youtube.refresh).bind_value(globals(),'lvt').classes('max-w-15 disable-scrollbars'):
+        with ui.number(value=lvt,precision=0,min=0).bind_value(globals(),'lvt').classes('max-w-15 disable-scrollbars'):
             ui.tooltip('Max Viewcount').props('delay="1000"')
         with ui.button(icon='search',on_click=lambda:search_youtube()).props('flat color=white'):
             ui.tooltip('Search').props('delay="1000"')
@@ -275,9 +345,12 @@ def main_page():
     with ui.left_drawer(value=False).classes('bg-blue-100').props('width=60 bordered') as left_drawer:
         ui.space()
 
-    with ui.grid().classes('w-full justify-self-auto').style('grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))'):
-        load_cards()    
+    searched_term()
 
+    with ui.grid().classes('w-full justify-self-auto').style('grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))'):
+        load_cards()
+
+    ui.query('body').style(f'background-color: black')
     ui.colors(primary='#555')
 
 ui.run(storage_secret='youtube_graveyard')
