@@ -4,7 +4,10 @@ import rand_gens as rg
 from random import randint
 from re import findall
 from youtube_search import YoutubeSearch
+from dotenv import load_dotenv
 import sys, asyncio, os, traceback
+
+load_dotenv()
 
 environment = os.getenv('ENVIRONMENT','local')
 working_dir = os.getenv('WORKING_DIR','files')
@@ -21,7 +24,7 @@ def timeout_error_page(exception: Exception) -> None:
         ui.label(f'{exception}').classes('text-2xl')
         ui.code(traceback.format_exc(chain=False))
 
-app.add_static_files(f"/{working_dir}", f"{working_dir}")
+app.add_static_files(f"/files", f"{working_dir}")
 lds = jf.load(f'{working_dir}/leads.json')
 
 @ui.page('/no-lead')
@@ -270,7 +273,7 @@ if lds:
                 vw = result['views']
                 up = result['publish_time']
                 lnk = 'https://youtube.com' + result['url_suffix']
-                with ui.link(target=lnk,new_tab='true').classes('text-primary !no-underline justify-center'):
+                with ui.link(target=lnk,new_tab='true').classes('text-primary !no-underline justify-center').style('max-width: 500px;'):
                     with ui.card().tight().props('bordered flat').style('max-width: 500px;'):
                         ui.image(tmb).style('max-width: 500px')
                         with ui.card_section():
@@ -347,7 +350,7 @@ def main_page():
         with ui.header().classes(replace='row items-center').style('gap: 5px') as header:
             ui.button(on_click=lambda: left_drawer.toggle(), icon='menu').props('flat color=white')
             # ui.label('YouTube Recycle Bin')
-            ui.image(f'/{working_dir}/YTRB_logo_beta.png').style('max-width: 100px')
+            ui.image(f'/files/YTRB_logo_beta.png').style('max-width: 100px')
             with ui.button(on_click=lambda: randomize(), icon='casino').props('flat color=white'):
                 ui.tooltip('Randomize').props('delay="1000"')
             with ui.button(icon='lock', on_click=lambda: lock_cat(cat_lock_btn)).props('flat color=white') as cat_lock_btn:
