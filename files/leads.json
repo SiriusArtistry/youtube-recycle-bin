@@ -34,11 +34,13 @@
         "Untitled video (Misc)":"\"Untitled video\"",
         "Com Oculus Vrshell (VR Headset)":"\"Com Oculus Vrshell\"",
         "Com Oculus Metacam (VR Headset)":"\"Com Oculus Metacam\"",
-        "Desktop (Game Capture)":"Desktop YYYY MM DD"
+        "Desktop (Game Capture)":"Desktop YYYY MM DD",
+        "Movie Maker (Video Editor)":"\"trial 0\""
     },
     "old":{
         "IMG":"IMG ####",
         "MVI":"MVI ####",
+        "MVI_":"MVI_####",
         "MOV (Camera)":"MOV ####",
         "100 (Camera)":"100 ####",
         "100_ (Camera)":"100_####",

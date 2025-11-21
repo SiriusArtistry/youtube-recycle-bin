@@ -219,3 +219,6 @@ __marimo__/
 
 #NiceGUI
 .nicegui
+
+#Development
+.dev

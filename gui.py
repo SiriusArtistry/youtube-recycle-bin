@@ -7,6 +7,7 @@ from re import findall
 from youtube_search import YoutubeSearch
 import asyncio
 
+print('\n'*20)
 print('*'*40+'\nSTARTING APPLICATION...\n'+'*'*40)
 
 app.add_static_files("/files", "files")
@@ -24,6 +25,7 @@ lvt = 0
 date_eval = False
 time_eval = False
 max_results=300
+abs_max_results = 5000
 enable_try_again = True
 cat_lock = True
 lead_lock = False
@@ -43,7 +45,7 @@ def params_needed():
     if isinstance(st,list):
         prm = st
         if st: st = st.pop(0) 
-        else: st = cat_lds[ld]
+        else: return False
         if verbose: print(f'PARAMETERS: {prm}')
     else:
         prm = False
@@ -176,7 +178,7 @@ def randomize():
         if not lead_lock:
             ld = rg.random_choice(cat_lds)
             print(f'Choosing lead from \'{cat}\': \"{ld}\"...')
-            lead_select.refresh()
+            # lead_select.refresh()
     # params_needed.refresh()
 
 async def search_youtube(num_results=max_results):
@@ -224,15 +226,15 @@ async def search_youtube(num_results=max_results):
 
     # results = jf.load('files/lv_result.json')
     # print(f'Loaded {len(results)} videos...')
-    load_cards.refresh()
     searched_term.refresh()
+    load_cards.refresh()    
 
 async def try_again():
     global enable_try_again
     more_results = 0
     enable_try_again = False
     load_cards.refresh()
-    while not results and more_results<5000-(max_results):
+    while not results and more_results<abs_max_results-(max_results):
         more_results += 300
         print(f"Setting max results to {max_results+more_results}...")
         await search_youtube(max_results+more_results)
@@ -353,4 +355,4 @@ def main_page():
     ui.query('body').style(f'background-color: black')
     ui.colors(primary='#555')
 
-ui.run(storage_secret='youtube_graveyard')
+ui.run()
