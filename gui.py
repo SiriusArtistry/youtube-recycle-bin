@@ -1,11 +1,11 @@
-from nicegui import app, ui
+from nicegui import app, ui, context
 import json_file as jf
 import rand_gens as rg
 from random import randint
 from re import findall
 from youtube_search import YoutubeSearch
 from dotenv import load_dotenv
-import sys, asyncio, os, traceback
+import os, traceback
 
 load_dotenv()
 
@@ -17,7 +17,7 @@ print('*'*40+'\nSTARTING APPLICATION...\n'+'*'*40)
 
 @app.on_page_exception
 def timeout_error_page(exception: Exception) -> None:
-    if not isinstance(exception, TimeoutError):
+    if not isinstance(exception, ConnectionError):
         raise exception
     with ui.column().classes('absolute-center items-center gap-8'):
         ui.icon('sym_o_timer', size='xl')
@@ -34,6 +34,10 @@ def raise_filenotfound_error():
     else:
         ui.navigate.to('/')
 
+@ui.page('/rate-limit')
+def raise_ratelimit_error():
+    raise ConnectionError('Couldn\'t reach YouTube...')
+
 if lds: 
     print("Found leads...")
     cats = lds.keys()
@@ -46,12 +50,11 @@ if lds:
     max_results=300
     abs_max_results = 5000
     enable_try_again = True
+    enable_search = True
     cat_lock = True
     lead_lock = False
+    results=False
     verbose = True
-
-# results = jf.load('files/lv_result.json')
-# print(f'Loaded {len(results)} videos...')
 
     @ui.refreshable
     def params_needed():
@@ -198,11 +201,14 @@ if lds:
             if not lead_lock:
                 ld = rg.random_choice(cat_lds)
                 print(f'Choosing lead from \'{cat}\': \"{ld}\"...')
+            else:
+                params_needed.refresh()
                 # lead_select.refresh()
         # params_needed.refresh()
 
-    async def search_youtube(num_results=max_results):
+    async def search_youtube(button: ui.button, num_results=max_results) -> None:
         global results, lv_results, st, lvt, app
+        button.disable()
         s_term = st
         if cat == "new":
             s_filter = "&sp=CAI%253D"
@@ -215,7 +221,11 @@ if lds:
 
         print('%'*40)
         print('SEARCHING YOUTUBE...')
-        results = YoutubeSearch(s_term, num_results).to_dict()
+        try:
+            results = YoutubeSearch(s_term, num_results).to_dict()
+        except ConnectionError:
+            raise_ratelimit_error()
+
         lv_results = []
         print(f'Found {len(results)} videos matching \'{s_term}\'...')
         for result in results:
@@ -246,6 +256,7 @@ if lds:
 
         # results = jf.load('files/lv_result.json')
         # print(f'Loaded {len(results)} videos...')
+        button.enable()
         searched_term.refresh()
         load_cards.refresh()    
 
@@ -275,7 +286,7 @@ if lds:
                 lnk = 'https://youtube.com' + result['url_suffix']
                 with ui.link(target=lnk,new_tab='true').classes('text-primary !no-underline justify-center').style('max-width: 500px;'):
                     with ui.card().tight().props('bordered flat').style('max-width: 500px;'):
-                        ui.image(tmb).style('max-width: 500px')
+                        ui.image(tmb).style('w-full max-width: 500px; max-height: 280;')
                         with ui.card_section():
                             ui.label(ti).style('color: white; font-weight: 1000')
                             with ui.row().style('color: white'):
@@ -319,19 +330,7 @@ if lds:
         lead_lock = not lead_lock
         toggle_icon_button(button_element)
 
-@ui.page('/')
-def main_page():
-    global results
-    if not lds: ui.navigate.to('/no-lead')
-    else:
-    # print(app.storage.browser)
-    # if 'results' in app.storage.browser:
-    #     results = app.storage.browser['results']
-    # else:
-    #     results = False
-
-        results=False
-
+    def common_header():
         ui.add_css('''
             @layer utilities{
                 .disable-scrollbars::-webkit-scrollbar {
@@ -347,10 +346,10 @@ def main_page():
             }
         ''')
 
-        with ui.header().classes(replace='row items-center').style('gap: 5px') as header:
+        with ui.header().classes(replace='row items-center').style('gap: 5px') as main_header:
             ui.button(on_click=lambda: left_drawer.toggle(), icon='menu').props('flat color=white')
             # ui.label('YouTube Recycle Bin')
-            ui.image(f'/files/YTRB_logo_beta.png').style('max-width: 100px')
+            ui.image('/files/YTRB_logo_beta.png').style('max-width: 100px')
             with ui.button(on_click=lambda: randomize(), icon='casino').props('flat color=white'):
                 ui.tooltip('Randomize').props('delay="1000"')
             with ui.button(icon='lock', on_click=lambda: lock_cat(cat_lock_btn)).props('flat color=white') as cat_lock_btn:
@@ -362,24 +361,39 @@ def main_page():
             ui.space()
             with ui.number(value=lvt,precision=0,min=0).bind_value(globals(),'lvt').classes('max-w-15 disable-scrollbars'):
                 ui.tooltip('Max Viewcount').props('delay="1000"')
-            with ui.button(icon='search',on_click=lambda:search_youtube()).props('flat color=white'):
+            with ui.button(icon='search',on_click=lambda:search_youtube(search_btn)).props('flat color=white') as search_btn:
                 ui.tooltip('Search').props('delay="1000"')
 
         with ui.footer(value=False) as footer:
             ui.label('Footer')
 
-        with ui.left_drawer(value=False).classes('bg-blue-100').props('width=60 bordered') as left_drawer:
+        with ui.left_drawer(value=False).classes('bg-blue-100 disable-scrollbar').props('width=60 bordered') as left_drawer:
             ui.space()
+            with ui.link(target='https://github.com/zauberzeug/nicegui',new_tab=True):
+                ui.interactive_image('https://nicegui.io/logo.png').classes('w-full h-auto') # Example image from URL
+            with ui.link(target='https://github.com/SiriusArtistry/youtube-recycle-bin',new_tab=True):
+                ui.interactive_image('/files/github-mark-white.png').classes('w-full h-auto')
 
-        searched_term()
+        ui.query('body').style(f'background-color: black')
+        ui.colors(primary='#555')
+else:
+    ui.navigate.to('/no-lead')
 
-        with ui.grid().classes('w-full justify-self-auto').style('grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))'):
-            load_cards()
+@ui.page('/')
+def main_page():
+    common_header()
+    searched_term()
 
-    ui.query('body').style(f'background-color: black')
-    ui.colors(primary='#555')
+    with ui.grid().classes('w-full justify-self-auto').style('grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))'):
+        load_cards()    
 
-if environment == 'pythonanywhere':
+@ui.page('/about')
+def about_page():
+    common_header()
+    ui.label('Hello there')
+
+print(environment)
+if not environment == 'local':
     ui.run_with(app,title='YouTube Video Graveyard',favicon='🪦')
 else:
     ui.run()
