@@ -6,13 +6,17 @@ from random import randint
 from re import findall
 from youtube_search import YoutubeSearch
 import asyncio
+import os
+
+environment = os.getenv('ENVIRONMENT','local')
+working_dir = os.getenv('WORKING_DIR','files')
 
 print('\n'*20)
 print('*'*40+'\nSTARTING APPLICATION...\n'+'*'*40)
 
-app.add_static_files("/files", "files")
+app.add_static_files(f"/{working_dir}", f"{working_dir}")
 
-lds = jf.load('files/leads.json')
+lds = jf.load(f'{working_dir}/leads.json')
 if lds: 
     print("Found leads...")
 else: sys.exit()
@@ -303,10 +307,12 @@ def lock_lead(button_element):
 def main_page():
     global results
     # print(app.storage.browser)
-    if 'results' in app.storage.browser:
-        results = app.storage.browser['results']
-    else:
-        results = False
+    # if 'results' in app.storage.browser:
+    #     results = app.storage.browser['results']
+    # else:
+    #     results = False
+
+    results=False
 
     ui.add_css('''
         @layer utilities{
@@ -326,7 +332,7 @@ def main_page():
     with ui.header().classes(replace='row items-center').style('gap: 5px') as header:
         ui.button(on_click=lambda: left_drawer.toggle(), icon='menu').props('flat color=white')
         # ui.label('YouTube Recycle Bin')
-        ui.image('/files/YTRB_logo_beta.png').style('max-width: 100px')
+        ui.image(f'{working_dir}/YTRB_logo_beta.png').style('max-width: 100px')
         with ui.button(on_click=lambda: randomize(), icon='casino').props('flat color=white'):
             ui.tooltip('Randomize').props('delay="1000"')
         with ui.button(icon='lock', on_click=lambda: lock_cat(cat_lock_btn)).props('flat color=white') as cat_lock_btn:
@@ -355,4 +361,7 @@ def main_page():
     ui.query('body').style(f'background-color: black')
     ui.colors(primary='#555')
 
-ui.run()
+if environment == 'pythonanywhere':
+    ui.run_with(app,title='YouTube Video Graveyard',favicon='🪦')
+else:
+    ui.run()
