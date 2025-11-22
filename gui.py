@@ -17,6 +17,7 @@ print('*'*40+'\nSTARTING APPLICATION...\n'+'*'*40)
 
 @app.on_page_exception
 def timeout_error_page(exception: Exception) -> None:
+    common_header()
     if not isinstance(exception, ConnectionError):
         raise exception
     with ui.column().classes('absolute-center items-center gap-8'):
@@ -208,7 +209,7 @@ if lds:
 
     async def search_youtube(button: ui.button, num_results=max_results) -> None:
         global results, lv_results, st, lvt, app
-        button.disable()
+        # button.disable()
         s_term = st
         if cat == "new":
             s_filter = "&sp=CAI%253D"
@@ -224,7 +225,7 @@ if lds:
         try:
             results = YoutubeSearch(s_term, num_results).to_dict()
         except ConnectionError:
-            raise_ratelimit_error()
+            ui.navigate.to('/rate-limit')
 
         lv_results = []
         print(f'Found {len(results)} videos matching \'{s_term}\'...')
@@ -256,7 +257,7 @@ if lds:
 
         # results = jf.load('files/lv_result.json')
         # print(f'Loaded {len(results)} videos...')
-        button.enable()
+        # button.enable()
         searched_term.refresh()
         load_cards.refresh()    
 
@@ -331,38 +332,13 @@ if lds:
         toggle_icon_button(button_element)
 
     def common_header():
-        ui.add_css('''
-            @layer utilities{
-                .disable-scrollbars::-webkit-scrollbar {
-                    background: transparent; /* Chrome/Safari/Webkit */
-                    width: 0px;
-                display: none;
-                }
-        
-                .disable-scrollbars {
-                    scrollbar-width: none !important; /* Firefox */
-                    -ms-overflow-style: none !important;  /* IE 10+ */
-                }
-            }
-        ''')
-
-        with ui.header().classes(replace='row items-center').style('gap: 5px') as main_header:
+        global main_header
+        with ui.header().classes(replace='row items-center min-h-14').style('gap: 5px') as main_header:
             ui.button(on_click=lambda: left_drawer.toggle(), icon='menu').props('flat color=white')
             # ui.label('YouTube Recycle Bin')
-            ui.image('/files/YTRB_logo_beta.png').style('max-width: 100px')
-            with ui.button(on_click=lambda: randomize(), icon='casino').props('flat color=white'):
-                ui.tooltip('Randomize').props('delay="1000"')
-            with ui.button(icon='lock', on_click=lambda: lock_cat(cat_lock_btn)).props('flat color=white') as cat_lock_btn:
-                ui.tooltip('Lock Category').props('delay="1000"')
-            with ui.select(options=list(cats),on_change=lambda: lead_select.refresh()).bind_value(globals(),'cat') as cat_btn:
-                ui.tooltip('Category').props('delay="1000"')
-            lead_select()
-            params_needed()
-            ui.space()
-            with ui.number(value=lvt,precision=0,min=0).bind_value(globals(),'lvt').classes('max-w-15 disable-scrollbars'):
-                ui.tooltip('Max Viewcount').props('delay="1000"')
-            with ui.button(icon='search',on_click=lambda:search_youtube(search_btn)).props('flat color=white') as search_btn:
-                ui.tooltip('Search').props('delay="1000"')
+            with ui.link(target='/'):
+                ui.interactive_image('/files/YTRB_logo_beta.png').style('max-width: 100px')
+            
 
         with ui.footer(value=False) as footer:
             ui.label('Footer')
@@ -381,10 +357,42 @@ else:
 
 @ui.page('/')
 def main_page():
+    print('.'*40)
+    print("MAIN PAGE")
+    global main_header
+    ui.add_css('''
+        @layer utilities{
+            .disable-scrollbars::-webkit-scrollbar {
+                background: transparent; /* Chrome/Safari/Webkit */
+                width: 0px;
+            display: none;
+            }
+    
+            .disable-scrollbars {
+                scrollbar-width: none !important; /* Firefox */
+                -ms-overflow-style: none !important;  /* IE 10+ */
+            }
+        }
+    ''')
     common_header()
+    with main_header:
+        with ui.button(on_click=lambda: randomize(), icon='casino').props('flat color=white'):
+            ui.tooltip('Randomize').props('delay="1000"')
+        with ui.button(icon='lock', on_click=lambda: lock_cat(cat_lock_btn)).props('flat color=white') as cat_lock_btn:
+            ui.tooltip('Lock Category').props('delay="1000"')
+        with ui.select(options=list(cats),on_change=lambda: lead_select.refresh()).bind_value(globals(),'cat') as cat_btn:
+            ui.tooltip('Category').props('delay="1000"')
+        lead_select()
+        params_needed()
+        ui.space()
+        with ui.number(value=lvt,precision=0,min=0).bind_value(globals(),'lvt').classes('max-w-15 disable-scrollbars'):
+            ui.tooltip('Max Viewcount').props('delay="1000"')
+        with ui.button(icon='search',on_click=lambda:search_youtube(search_btn)).props('flat color=white') as search_btn:
+            ui.tooltip('Search').props('delay="1000"')
+
     searched_term()
 
-    with ui.grid().classes('w-full justify-self-auto').style('grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))'):
+    with ui.grid().classes('w-full').style('grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))'):
         load_cards()    
 
 @ui.page('/about')
