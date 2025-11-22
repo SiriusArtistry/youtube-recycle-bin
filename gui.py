@@ -18,12 +18,11 @@ print('*'*40+'\nSTARTING APPLICATION...\n'+'*'*40)
 @app.on_page_exception
 def timeout_error_page(exception: Exception) -> None:
     common_header()
-    if not isinstance(exception, ConnectionError):
-        raise exception
     with ui.column().classes('absolute-center items-center gap-8'):
-        ui.icon('sym_o_timer', size='xl')
-        ui.label(f'{exception}').classes('text-2xl')
-        ui.code(traceback.format_exc(chain=False))
+        ui.icon('error_outline', size='xl').style('color: gray')
+        ui.label(f'{exception}').classes('text-2xl').style('color: gray')
+        try_btn = ui.button('Try Again',on_click=lambda:ui.navigate.to('/')).classes('w-full justify-self-center')
+        
 
 app.add_static_files(f"/files", f"{working_dir}")
 lds = jf.load(f'{working_dir}/leads.json')
@@ -39,13 +38,23 @@ def raise_filenotfound_error():
 def raise_ratelimit_error():
     raise ConnectionError('Couldn\'t reach YouTube...')
 
+@ui.page('/search-error')
+def raise_search_error():
+    if not st:
+        results=False
+        randomize()
+        load_cards.refresh()
+        raise TypeError(f'Had trouble using lead {ld}...')
+    else:
+        ui.navigate.to('/')
+
 if lds: 
     print("Found leads...")
     cats = lds.keys()
     cat = 'old'
     ld = 'IMG'
     st = ''
-    lvt = 0
+    lvt = 100
     date_eval = False
     time_eval = False
     max_results=300
@@ -63,17 +72,29 @@ if lds:
         date_eval, time_eval = False, False
         print('-'*40)
         print("REFRESHING PARAMETERS...")
-        st = False
-        while not st:
-            st = cat_lds[ld]
+        st = cat_lds[ld]
         print(f'RAW SEARCH TERM: {st}')
         if isinstance(st,list):
             prm = st
-            st = st.pop(0) 
+            try:
+                st = st.pop(0)
+            except IndexError:
+                ui.navigate.to('/search-error')
             if verbose: print(f'PARAMETERS: {prm}')
         else:
             prm = False
-        
+
+        try:
+            hex_eval = findall(r'\$+', st)
+        except TypeError:
+            ui.navigate.to('/search-error')
+            return False
+        if hex_eval:
+            rh = rg.rNh(len(hex_eval[0]))
+            ui.input(value=rh).classes('max-w-15').set_enabled(False)
+            if verbose: print(f'RANDOM HEX FOR {hex_eval[0]}: {rh}')
+            st = st.replace(str(hex_eval[0]),str(rh))   
+  
         num_eval = findall(r'\#+', st)
         if num_eval:
             for n in range(len(num_eval)):
@@ -84,13 +105,6 @@ if lds:
                 ui.number(value=rn).classes('max-w-15').set_enabled(False)
                 if verbose: print(f'RANDOM NUMBER FOR {num_eval[n]}: {rn}')
                 st = st.replace(num_eval[n],str(rn))
-        
-        hex_eval = findall(r'\$+', st)
-        if hex_eval:
-            rh = rg.rNh(len(hex_eval[0]))
-            ui.input(value=rh).classes('max-w-15')
-            if verbose: print(f'RANDOM HEX FOR {hex_eval[0]}: {rh}')
-            st = st.replace(str(hex_eval[0]),str(rh))    
 
         year_eval = findall(r'Y{2,}',st)
 
@@ -287,7 +301,7 @@ if lds:
                 lnk = 'https://youtube.com' + result['url_suffix']
                 with ui.link(target=lnk,new_tab='true').classes('text-primary !no-underline justify-center').style('max-width: 500px;'):
                     with ui.card().tight().props('bordered flat').style('max-width: 500px;'):
-                        ui.image(tmb).style('w-full max-width: 500px; max-height: 280;')
+                        ui.image(tmb).classes('aspect-180/101; max-h-280px max-w-500px')
                         with ui.card_section():
                             ui.label(ti).style('color: white; font-weight: 1000')
                             with ui.row().style('color: white'):
@@ -302,21 +316,23 @@ if lds:
                     ui.label('Welcome to the YouTube Recycle Bin').style('font-size: 200%')
                     ui.label('🎲 Randomize and 🔎 Search to get started...')
             else:
-                with ui.column().classes('justify-self-center'):
+                with ui.column().classes('absolute-center w-1fr'):
                     ui.space()
-                    ui.label('Nothing here...').style('color: gray')
-                    try_btn = ui.button('Try Again',on_click=lambda: try_again()).set_enabled(enable_try_again)
+                    info = f'Nothing here for {st} with less than {format(int(lvt),',')} views...'
+                    info = info.replace('less than 0','no').replace('1 videos', '1 video')
+                    ui.label(info).style('color: gray').classes('w-full justify-center')
+                    try_btn = ui.button('Try Again',on_click=lambda: try_again()).classes('w-full justify-self-center').set_enabled(enable_try_again)
 
     @ui.refreshable
     def searched_term():
         if results:
             with ui.row().classes(replace='row items-center w-[100%] no-wrap').style('background-color: black; margin: 0; padding: 0; display: flex;'):
-                info = f'Found {len(lv_results)} videos matching {st} with less than {int(lvt)} views...'
-                info = info.replace('less than 0','no')
+                info = f'Found {len(lv_results)} videos matching {st} with less than {format(int(lvt),',')} views...'
+                info = info.replace('less than 0','no').replace('1 videos', '1 video')
                 ui.label(info)
 
-    def toggle_icon_button(button_element):
-        if button_element.icon == 'lock_open':
+    def set_icon_button(button_element,state):
+        if state:
             button_element.set_icon('lock')
         else:
             button_element.set_icon('lock_open')
@@ -324,12 +340,12 @@ if lds:
     def lock_cat(button_element):
         global cat_lock
         cat_lock = not cat_lock
-        toggle_icon_button(button_element)
+        set_icon_button(button_element,cat_lock)
 
     def lock_lead(button_element):
         global lead_lock
         lead_lock = not lead_lock
-        toggle_icon_button(button_element)
+        set_icon_button(button_element,lead_lock)
 
     def common_header():
         global main_header
@@ -400,7 +416,7 @@ def about_page():
     common_header()
     ui.label('Hello there')
 
-print(environment)
+print(f'Running in environment \'{environment}\'')
 if not environment == 'local':
     ui.run_with(app,title='YouTube Video Graveyard',favicon='🪦')
 else:

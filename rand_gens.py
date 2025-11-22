@@ -28,4 +28,4 @@ def rNd(n):
     return str(randint(0, range_end)).zfill(n)
 
 def rNh(n):
-    return str(hex(randint(0,16**n))).zfill(n)
+    return str(hex(randint(0,16**n)).upper()[2:]).zfill(n)
