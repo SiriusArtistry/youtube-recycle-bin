@@ -418,6 +418,6 @@ def about_page():
 
 print(f'Running in environment \'{environment}\'')
 if not environment == 'local':
-    ui.run_with(app,title='YouTube Video Graveyard',favicon='🪦')
+    ui.run_with(app,title='YouTube Recycle Bin',favicon='♻️')
 else:
     ui.run()
