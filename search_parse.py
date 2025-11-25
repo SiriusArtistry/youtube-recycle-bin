@@ -15,11 +15,11 @@ def params():
     print(f'PAR: RAW SEARCH TERM: {config.st}')
 
     if isinstance(config.st,list):
-        prm = config.st
+        config.prm = config.st
         config.st = config.st.pop(0)
-        print(f'PAR: PARAMETERS: {prm}')
+        print(f'PAR: PARAMETERS: {config.prm}')
     else:
-        prm = False
+        config.prm = False
 
     hex_eval, config.rh = findall(r'\$+', config.st), []
     if hex_eval:
@@ -31,8 +31,8 @@ def params():
     num_eval, config.rn = findall(r'\#+', config.st), []
     if num_eval:
         for n in range(len(num_eval)):
-            if prm:
-                config.rn.append(str(rg.ri(prm[n][0],prm[n][1])).zfill(len(str(prm[n][1]))))
+            if config.prm:
+                config.rn.append(str(rg.ri(config.prm[n][0],config.prm[n][1])).zfill(len(str(config.prm[n][1]))))
             else:
                 config.rn.append(rg.rNd(len(num_eval[n])))
             
@@ -40,8 +40,8 @@ def params():
             config.st = config.st.replace(num_eval[n],str(config.rn[n]))
     
     year_eval = findall(r'Y{2,}',config.st)
-    if prm and year_eval:
-        rd_dt = rg.random_date(prm[0],"today")
+    if config.prm and year_eval:
+        rd_dt = rg.random_date(config.prm[0],"today")
     elif config.cat == "low":
         rd_dt = rg.random_date("youtube",2008)
     else:

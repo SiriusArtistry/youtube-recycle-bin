@@ -81,19 +81,28 @@ def gui_update_params():
     global date_picker, time_picker
     if config.rh:
         for r in config.rh:
-            ui.input(value=r).classes('max-w-15').set_enabled(False)
+            ui.input(label='X'*len(r),value=r).classes('max-w-15').set_enabled(False)
 
     if config.rn:
         for r in config.rn:
-            ui.number(value=r).classes('max-w-15').set_enabled(False)
+            if config.prm:
+                rmin, rmax = config.prm[0][0], config.prm[0][1]
+            else:
+                rmin = 0
+                rmax = 9999
+            ui.number(label='X'*len(r),value=r,min=rmin,max=rmax).classes('max-w-15').set_enabled(False)
 
     if config.date_eval:
         date_picker = config.date_picker
-        ui.date_input(value=date_picker).bind_value(globals(),'date_picker').classes('max-w-32').set_enabled(False)
+        if config.prm:
+            date_after = f' (after {config.prm[0]})'
+        else:
+            date_after = ''
+        ui.date_input(label=f'Date{date_after}', value=date_picker).bind_value(globals(),'date_picker').classes('w-auto max-w-38').set_enabled(False)
 
     if config.time_eval:
         time_picker = config.time_picker
-        ui.time_input(value=time_picker).bind_value(globals(),'time_picker').classes('max-w-32').set_enabled(False)
+        ui.time_input(label='Time', value=time_picker).bind_value(globals(),'time_picker').classes('max-w-32').set_enabled(False)
 
 def gui_randomize():
     global lead_lock, enable_try_again, cat_btn, lead_btn
@@ -157,8 +166,8 @@ def gui_load_cards():
             if result['thumbnails']:
                 tmb = result['thumbnails'][0]
             ti = result['title']
-            if len(ti) > 64:
-                ti = ti[:61] + "..."
+            if len(ti) > 50:
+                ti = ti[:47] + "..."
             ds = result['long_desc']
             ch = result['channel']
             vw = result['views']
@@ -265,7 +274,7 @@ def gui_lead_header():
     lead_btn = config.ld
     with ui.button(icon='lock_open', on_click=lambda: lock_lead(lead_lock_btn)).props('flat color=white') as lead_lock_btn:
         ui.tooltip('Lock Lead').props('delay="1000"')
-    with ui.select(options=list(config.cat_key), with_input=True,on_change=lambda: gui_lead_select()).bind_value(globals(),'lead_btn'):
+    with ui.select(label='Lead',options=list(config.cat_key), with_input=True,on_change=lambda: gui_lead_select()).bind_value(globals(),'lead_btn').classes('w-500px'):
         ui.tooltip('Lead').props('delay="1000"')
             
     gui_update_params.refresh()
@@ -297,7 +306,7 @@ def main_page():
         gui_update_params()
 
         ui.space()
-        with ui.number(value=config.lvt,precision=0,min=0).bind_value(globals(),'lvt_btn').classes('max-w-15 disable-scrollbars'):
+        with ui.number(label='Views',value=config.lvt,precision=0,min=0).bind_value(globals(),'lvt_btn').classes('max-w-15 disable-scrollbars'):
             ui.tooltip('Max Viewcount').props('delay="1000"')
         with ui.button(icon='search',on_click=lambda e:gui_search_youtube(e.sender)).props('flat color=red') as search_btn:
             ui.tooltip('Search').props('delay="1000"')
