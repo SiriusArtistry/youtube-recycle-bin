@@ -6,9 +6,12 @@ def init():
         time_eval, date_eval, date_picker, time_picker
     
     lds = jf.leads()
+    cats = lds.keys()
+    print("CFG: GOT ALL LEADS...")
     ld = ''
     cat = 'old'
     cat_lds = lds[cat]
+    print(f"CFG: GOT LEADS FROM CATEGORY {cat}...")
     st = ''
     results = False
     cat_key = cat_lds.keys()
@@ -17,4 +20,3 @@ def init():
     rn = []
     date_picker = ''
     time_picker = ''
-    cats = lds.keys()

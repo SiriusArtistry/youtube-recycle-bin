@@ -3,7 +3,12 @@ from nicegui import app, ui
 from dotenv import load_dotenv
 from contextlib import contextmanager
 
-config.init()
+print('\n'*20)
+print('*'*40+'\nGUI: STARTING APPLICATION...\n'+'*'*40)
+try:
+    config.init()
+except TypeError:
+    ui.navigate.to('/no-lead')
 
 cat_btn, lead_btn, lvt_btn = config.cat, config.ld, config.lvt
 
@@ -13,8 +18,6 @@ environment = os.getenv('ENVIRONMENT','local')
 working_dir = os.getenv('WORKING_DIR','docs')
 app.add_static_files(f"/docs", f"{working_dir}")
 
-print('\n'*20)
-print('*'*40+'\nGUI: STARTING APPLICATION...\n'+'*'*40)
 title = 'YouTube Recycle Bin'
 
 @app.on_page_exception
@@ -307,6 +310,10 @@ def main_page():
 @ui.page('/about')
 def about_page():
     common_header()
+    with main_header:
+        ui.space()
+        with ui.button(icon='search',on_click=lambda: ui.navigate.to('/')).props('flat color=red'):
+            ui.tooltip('Search').props('delay="1000"')
     with ui.column().classes('justify-center'):
         ui.markdown(json_file.readme())
 
