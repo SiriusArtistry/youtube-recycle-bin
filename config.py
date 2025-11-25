@@ -15,7 +15,7 @@ def init():
     st = ''
     results = False
     cat_key = cat_lds.keys()
-    lvt = 0
+    lvt = 100
     rh = []
     rn = []
     date_picker = ''
