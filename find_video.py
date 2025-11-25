@@ -1,4 +1,4 @@
-import search_term as st
+import search_parse as st
 import webbrowser
 
 category = 'old'

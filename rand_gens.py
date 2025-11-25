@@ -29,3 +29,6 @@ def rNd(n):
 
 def rNh(n):
     return str(hex(randint(0,16**n)).upper()[2:]).zfill(n)
+
+def ri(a,b):
+    return randint(a,b)

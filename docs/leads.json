@@ -76,7 +76,7 @@
         "Capture [Date]":["Capture YYYYMMDD",2008],
         "Inshot [Date]":["InShot YYYYMMDD",2016],
         "PXL [Date]":["PXL YYYYMMDD",2020],
-        "AUD-[DATE]":["AUD-YYYYMMDD",2017],
+        "AUD-[Date]":["AUD-YYYYMMDD",2017],
         "WhatsApp Video":["WhatsApp Video YYYY MM DD",2015],
         "Desktop (Game Capture)":"Desktop YYYY MM DD",
         "Axon Body Video (Body Cam)":"\"Axon Body * Video\"",
@@ -100,7 +100,9 @@
         "MOV0 (Camera)":"MOV0####",
         "MUSIC (Misc)":"MUSIC##.DAT",
         "REC (Drone/Dashcam)":["REC ####",[0,1000]],
-        "Clip (Misc)":"Clip##"
+        "Clip (Misc)":"Clip##",
+        "[Day Month Year] (Misc)":"DD Month YYYY",
+        "VLC Record (Game Capture/Misc)":"vlc record YYYY MM DD"
     },
     "low":{
         "You have new picture mail! (Phone)":"\"You have new picture mail! (video)\"",
