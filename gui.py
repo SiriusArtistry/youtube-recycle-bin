@@ -27,7 +27,7 @@ def timeout_error_page(exception: Exception) -> None:
         ui.icon('error_outline', size='xl').style('color: gray')
         ui.label(f'Encountered an issue...').classes('text-2xl').style('color: gray')
         ui.code(str(exception)).classes('w-auto')
-        ui.button('Try Again',on_click=lambda:ui.navigate.to('/')).classes('w-full justify-self-center')
+        ui.button('Try Again',on_click=lambda:ui.navigate.to('/')).classes('w-40px justify-self-center')
 
 @ui.page('/no-lead')
 def raise_filenotfound_error():
@@ -142,9 +142,6 @@ class YouTubeLink(ui.link):
     def __init__(self, target = '', text = 'Go to Youtube', new_tab = True):
         super().__init__(text, f'https://www.youtube.com/results?search_query={target}', new_tab)
         ui.add_css('''
-            .red{
-                   color: red;
-            }
             .ext[href^="http"]::after {
                                 content: "";
                 display: inline-block;
@@ -154,9 +151,10 @@ class YouTubeLink(ui.link):
 
                 background-size: 100%;
                 background-image: url("docs/external-link-26.png");
+                filter: invert(100%);
             }
         ''')
-        self.classes('red ext')
+        self.classes('text-accent ext w-40px')
 
 @ui.refreshable
 def gui_load_cards():
@@ -174,7 +172,7 @@ def gui_load_cards():
             up = result['publish_time']
             lnk = 'https://youtube.com' + result['url_suffix']
             with ui.link(target=lnk,new_tab='true').classes('text-primary !no-underline justify-center').style('max-width: 500px;'):
-                with ui.card().tight().props('bordered flat').style('max-width: 500px;').classes('bg-black'):
+                with ui.card().tight().props('bordered flat').style('max-width: 500px;').classes('bg-secondary'):
                     ui.image(tmb).classes('aspect-180/101; max-h-280px max-w-500px')
                     with ui.card_section():
                         ui.label(ti).style('color: white; font-weight: 1000')
@@ -192,21 +190,21 @@ def gui_load_cards():
                 ui.label('🎲 Randomize and 🔎 Search to get started...')
         else:
             print(f"GUI: NO RESULTS, NO MATCH...")
-            with ui.column().classes('absolute-center w-1fr'):
+            with ui.column().classes('absolute-center w-7/8').style(replace=''):
                 ui.space()
                 ui.icon('help_outline', size='xl').style('color: gray')
-                with ui.row(wrap=False).classes('w-auto'):
+                with ui.row(wrap=False):
                     info = f'Nothing here for \'{config.st}\' with less than {format(int(config.lvt),',')} views...\t'
                     info = info.replace('less than 0','no').replace('1 videos', '1 video')
-                    ui.label(info).style('color: gray').classes('w-full justify-center')
+                    ui.label(info).style('color: gray').classes('w-3/5 justify-center')
                     ui.space()
                     YouTubeLink(config.st)
-                ui.button('Try Again',on_click=lambda e: gui_try_again(e.sender)).classes('w-full justify-self-center').set_enabled(enable_try_again)
+                ui.button('Try Again',on_click=lambda e: gui_try_again(e.sender)).classes('w-40px justify-self-center').set_enabled(enable_try_again)
 
 @ui.refreshable
 def searched_term():
     if config.results:
-        with ui.row().classes(replace='row items-center w-[100%] no-wrap').style('background-color: black; margin: 0; padding: 0; display: flex;'):
+        with ui.row().classes(replace='row items-center w-[100%] no-wrap').style('margin: 0; padding: 0; display: flex;'):
             info = f'Found {len(config.results)} videos matching \'{config.st}\' with less than {format(int(config.lvt),',')} views...\t'
             info = info.replace('less than 0','no').replace('1 videos', '1 video')
             ui.label(info)
@@ -246,13 +244,13 @@ def common_header():
             }
         </style>
             ''')
-    with ui.header().classes(replace='gap-1 row items-center px-4 min-h-14 grid grid-rows-2 md:px-0 grid-rows-1 grid-flow-col absolue-full') as main_header:
+    with ui.header().classes(replace='gap-4 row items-center min-h-14 px-4 grid-rows-1 grid-flow-col absolue-full') as main_header:
         ui.button(on_click=lambda: left_drawer.toggle(), icon='menu').props('flat color=white').classes('md:px-0')
         # ui.label('YouTube Recycle Bin')
         with ui.link(target='/'):
             ui.interactive_image('/docs/YTRB_logo_beta.png').style('max-width: 100px').classes('display:block')
 
-    with ui.left_drawer(value=False).classes('bg-blue-100 disable-scrollbar').props('width=60 bordered') as left_drawer:
+    with ui.left_drawer(value=False).classes('bg-dark disable-scrollbar').props('width=60') as left_drawer:
         ui.space()
         with ui.link(target='https://github.com/zauberzeug/nicegui',new_tab=True):
             with ui.interactive_image('https://nicegui.io/logo.png').classes('w-full h-auto invert'):
@@ -264,8 +262,9 @@ def common_header():
             with ui.icon('info',color='white', size='25px'):
                 ui.tooltip('About').props('delay="1000" anchor="center right" self="center left"')
 
-    ui.query('body').style(f'background-color: black')
-    ui.colors(primary='#555555')
+    ui.query('body').style(f'background-color: dark_page')
+    ui.colors(primary='#212121', secondary='#1D1D1D', accent="#FF0033", dark_page='#111111')
+    ui.dark_mode(True)
 
 @ui.refreshable
 def gui_lead_header():
@@ -274,7 +273,7 @@ def gui_lead_header():
     lead_btn = config.ld
     with ui.button(icon='lock_open', on_click=lambda: lock_lead(lead_lock_btn)).props('flat color=white') as lead_lock_btn:
         ui.tooltip('Lock Lead').props('delay="1000"')
-    with ui.select(label='Lead',options=list(config.cat_key), with_input=True,on_change=lambda: gui_lead_select()).bind_value(globals(),'lead_btn').classes('w-500px'):
+    with ui.select(label='Lead',options=list(config.cat_key), with_input=True,on_change=lambda: gui_lead_select()).bind_value(globals(),'lead_btn').classes('w-500px text-white'):
         ui.tooltip('Lead').props('delay="1000"')
             
     gui_update_params.refresh()
@@ -308,20 +307,20 @@ def main_page():
         ui.space()
         with ui.number(label='Views',value=config.lvt,precision=0,min=0).bind_value(globals(),'lvt_btn').classes('max-w-15 disable-scrollbars'):
             ui.tooltip('Max Viewcount').props('delay="1000"')
-        with ui.button(icon='search',on_click=lambda e:gui_search_youtube(e.sender)).props('flat color=red') as search_btn:
+        with ui.button(icon='search',on_click=lambda e:gui_search_youtube(e.sender)).props('flat color=accent') as search_btn:
             ui.tooltip('Search').props('delay="1000"')
 
     searched_term()
 
     with ui.grid().classes('w-full').style('grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))'):
-        gui_load_cards()    
+        gui_load_cards()
 
 @ui.page('/about')
 def about_page():
     common_header()
     with main_header:
         ui.space()
-        with ui.button(icon='search',on_click=lambda: ui.navigate.to('/')).props('flat color=red'):
+        with ui.button(icon='search',on_click=lambda: ui.navigate.to('/')).props('flat color=accent'):
             ui.tooltip('Search').props('delay="1000"')
     with ui.column().classes('justify-center'):
         ui.markdown(json_file.readme())
