@@ -7,7 +7,7 @@ print('\n'*20)
 print('*'*40+'\nGUI: STARTING APPLICATION...\n'+'*'*40)
 try:
     config.init()
-except TypeError:
+except (TypeError, AttributeError):
     ui.navigate.to('/no-lead')
 
 cat_btn, lead_btn, lvt_btn = config.cat, config.ld, config.lvt
