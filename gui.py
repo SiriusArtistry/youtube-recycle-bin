@@ -41,11 +41,11 @@ def raise_ratelimit_error():
 
 @ui.page('/search-error')
 def raise_search_error():
-    if not app.storage.user['params']['st']:
-        app.storage.user['results'] = False
-        app.storage.user['lead'], app.storage.user['params'] = search_parse.randomize_lead(app.storage.user['cat'])
+    if not app.storage.client['params']['st']:
+        app.storage.client['results'] = False
+        app.storage.client['lead'], app.storage.client['params'] = search_parse.randomize_lead(app.storage.client['cat'])
         gui_load_cards.refresh()
-        raise TypeError(f'Had trouble using lead \'{app.storage.user['lead']}\'...')
+        raise TypeError(f'Had trouble using lead \'{app.storage.client['lead']}\'...')
     else:
         pass
         # ui.navigate.to('/')
@@ -61,18 +61,18 @@ def disable(button: ui.button):
 def gui_init():
     if config.lds:
         print("GUI: FOUND LEADS...")
-        if 'results'not in app.storage.user: app.storage.user['results'] = False
-        if 'cat'    not in app.storage.user: app.storage.user['cat']     = 'old'
-        if 'lvt'    not in app.storage.user: app.storage.user['lvt']     = 100
-        app.storage.user['lead'], app.storage.user['params'] = search_parse.randomize_lead(app.storage.user['cat'])
-        app.storage.user['allow_try_again'] = app.storage.user['allow_search'] = app.storage.user['cat_lock'] = True
-        app.storage.user['lead_lock'] = False
+        if 'results'not in app.storage.client: app.storage.client['results'] = False
+        if 'cat'    not in app.storage.client: app.storage.client['cat']     = 'old'
+        if 'lvt'    not in app.storage.client: app.storage.client['lvt']     = 100
+        app.storage.client['lead'], app.storage.client['params'] = search_parse.randomize_lead(app.storage.client['cat'])
+        app.storage.client['allow_try_again'] = app.storage.client['allow_search'] = app.storage.client['cat_lock'] = True
+        app.storage.client['lead_lock'] = False
     else:
         ui.navigate.to('/no-lead')
 
 def get_params():
     try:
-        app.storage.user['params'] = search_parse.params(app.storage.user['cat'],app.storage.user['lead'])
+        app.storage.client['params'] = search_parse.params(app.storage.client['cat'],app.storage.client['lead'])
     except (IndexError, TypeError):
         ui.navigate.to('/search-error')
     gui_update_params.refresh()
@@ -80,45 +80,45 @@ def get_params():
 @ui.refreshable
 def gui_update_params():
     global date_picker, time_picker
-    app.storage.user['params'] = search_parse.params(app.storage.user['cat'],app.storage.user['lead'])
-    if app.storage.user['params']['rh']:
-        for r in app.storage.user['params']['rh']:
+    app.storage.client['params'] = search_parse.params(app.storage.client['cat'],app.storage.client['lead'])
+    if app.storage.client['params']['rh']:
+        for r in app.storage.client['params']['rh']:
             ui.input(label='X'*len(r),value=r).classes('max-w-15').set_enabled(False)
 
-    if app.storage.user['params']['rn']:
-        for r in app.storage.user['params']['rn']:
-            if app.storage.user['params']['prm']:
-                rmin, rmax = app.storage.user['params']['prm'][0][0], app.storage.user['params']['prm'][0][1]
+    if app.storage.client['params']['rn']:
+        for r in app.storage.client['params']['rn']:
+            if app.storage.client['params']['prm']:
+                rmin, rmax = app.storage.client['params']['prm'][0][0], app.storage.client['params']['prm'][0][1]
             else:
                 rmin = 0
                 rmax = 9999
             ui.number(label='X'*len(r),value=r,min=rmin,max=rmax)\
                 .classes('max-w-15').set_enabled(False)
 
-    if app.storage.user['params']['date_eval'][0]:
-        date_picker = app.storage.user['params']['date_eval'][1]
-        if app.storage.user['params']['prm']:
-            date_after = f' (after {app.storage.user['params']['prm'][0]})'
+    if app.storage.client['params']['date_eval'][0]:
+        date_picker = app.storage.client['params']['date_eval'][1]
+        if app.storage.client['params']['prm']:
+            date_after = f' (after {app.storage.client['params']['prm'][0]})'
         else:
             date_after = ''
         ui.date_input(label=f'Date{date_after}', value=date_picker)\
             .bind_value(globals(),'date_picker').classes('w-auto max-w-38').set_enabled(False)
 
-    if app.storage.user['params']['time_eval'][0]:
-        time_picker = app.storage.user['params']['time_eval'][1]
+    if app.storage.client['params']['time_eval'][0]:
+        time_picker = app.storage.client['params']['time_eval'][1]
         ui.time_input(label='Time', value=time_picker)\
             .bind_value(globals(),'time_picker').classes('max-w-32').set_enabled(False)
 
 def gui_randomize():
-    app.storage.user['allow_try_again'] = True
+    app.storage.client['allow_try_again'] = True
     print('?'*40+'\nGUI: RANDOMIZING...')
-    if not app.storage.user['cat_lock']:
-        app.storage.user['lead_lock'] = False
-        app.storage.user['cat'], app.storage.user['lead'], app.storage.user['params'] = search_parse.randomize_cat()
+    if not app.storage.client['cat_lock']:
+        app.storage.client['lead_lock'] = False
+        app.storage.client['cat'], app.storage.client['lead'], app.storage.client['params'] = search_parse.randomize_cat()
         gui_lead_header.refresh()
     else:
-        if not app.storage.user['lead_lock']:
-            app.storage.user['lead'], app.storage.user['params'] = search_parse.randomize_lead(app.storage.user['cat'])
+        if not app.storage.client['lead_lock']:
+            app.storage.client['lead'], app.storage.client['params'] = search_parse.randomize_lead(app.storage.client['cat'])
             gui_lead_header.refresh()
         else:
             get_params()
@@ -126,7 +126,7 @@ def gui_randomize():
 async def gui_search_youtube(button: ui.button) -> None:
     with disable(button):
         try:
-            app.storage.user['results'] = await run.cpu_bound(search_youtube.search,app.storage.user['cat'], app.storage.user['params']['st'], app.storage.user['lvt'])
+            app.storage.client['results'] = await run.cpu_bound(search_youtube.search,app.storage.client['cat'], app.storage.client['params']['st'], app.storage.client['lvt'])
         except (ConnectionError, KeyError):
             ui.navigate.to('/rate-limit')
         searched_term.refresh()
@@ -134,11 +134,11 @@ async def gui_search_youtube(button: ui.button) -> None:
 
 async def gui_try_again(button: ui.button) -> list:
     global try_again_row
-    app.storage.user['allow_try_again'] = False
+    app.storage.client['allow_try_again'] = False
     with disable(button):
         with try_again_row:
             ui.spinner(size='lg', color='accent')
-        app.storage.user['results'] = await run.cpu_bound(search_youtube.try_again,app.storage.user['cat'], app.storage.user['params']['st'], app.storage.user['lvt'])
+        app.storage.client['results'] = await run.cpu_bound(search_youtube.try_again,app.storage.client['cat'], app.storage.client['params']['st'], app.storage.client['lvt'])
         gui_load_cards.refresh()
 
 class YouTubeLink(ui.link):
@@ -162,9 +162,9 @@ class YouTubeLink(ui.link):
 @ui.refreshable
 def gui_load_cards():
     global try_again_row
-    if app.storage.user['results'] and isinstance(app.storage.user['results'],list):
+    if app.storage.client['results'] and isinstance(app.storage.client['results'],list):
         print(f"GUI: FETCHING RESULTS...")
-        for result in app.storage.user['results']:
+        for result in app.storage.client['results']:
             if result['thumbnails']:
                 tmb = result['thumbnails'][0]
             ti = result['title']
@@ -176,7 +176,7 @@ def gui_load_cards():
             up = result['publish_time']
             lnk = 'https://youtube.com' + result['url_suffix']
             with ui.link(target=lnk,new_tab='true').classes('text-primary !no-underline justify-center').style('max-width: 500px;'):
-                with ui.card().tight().props('bordered flat').style('max-width: 500px;').classes('bg-secondary'):
+                with ui.card().tight().props('flat').style('max-width: 500px;').classes('bg-secondary'):
                     ui.image(tmb).classes('aspect-180/101; max-h-280px max-w-500px')
                     with ui.card_section():
                         ui.label(ti).style('color: white; font-weight: 1000')
@@ -186,7 +186,7 @@ def gui_load_cards():
                         ui.label(ch).classes('text-accent')
                         ui.label(ds)
     else:
-        if app.storage.user['results'] == False or not isinstance(app.storage.user['results'],list):
+        if app.storage.client['results'] == False or not isinstance(app.storage.client['results'],list):
             print(f"GUI: NO RESULTS, NEW INSTANCE...")
             with ui.column().classes('absolute-center w-3/4'):
                 ui.space()
@@ -198,23 +198,23 @@ def gui_load_cards():
                 ui.space()
                 ui.icon('help_outline', size='xl').style('color: gray')
                 with ui.row(wrap=False):
-                    info = f'Nothing here for \'{app.storage.user['params']['st']}\' with less than {format(int(app.storage.user['lvt']),',')} views...\t'
+                    info = f'Nothing here for \'{app.storage.client['params']['st']}\' with less than {format(int(app.storage.client['lvt']),',')} views...\t'
                     info = info.replace('less than 0','no').replace('1 videos', '1 video')
                     ui.label(info).style('color: gray').classes('w-3/5 justify-center')
                     ui.space()
-                    YouTubeLink(app.storage.user['params']['st'])
+                    YouTubeLink(app.storage.client['params']['st'])
                 with ui.row() as try_again_row:
-                    ui.button('Try Again',on_click=lambda e: gui_try_again(e.sender)).classes('w-40px justify-self-center').set_enabled(app.storage.user['allow_try_again'])
+                    ui.button('Try Again',on_click=lambda e: gui_try_again(e.sender)).classes('w-40px justify-self-center').set_enabled(app.storage.client['allow_try_again'])
 
 @ui.refreshable
 def searched_term():
-    if isinstance(app.storage.user['results'],dict):
+    if isinstance(app.storage.client['results'],dict):
         with ui.row().classes(replace='row items-center w-[100%] no-wrap').style('margin: 0; padding: 0; display: flex;'):
-            info = f'Found {len(app.storage.user['results'])} videos matching \'{app.storage.user['params']['st']}\' with less than {format(int(app.storage.user['lvt']),',')} views...\t'
+            info = f'Found {len(app.storage.client['results'])} videos matching \'{app.storage.client['params']['st']}\' with less than {format(int(app.storage.client['lvt']),',')} views...\t'
             info = info.replace('less than 0','no').replace('1 videos', '1 video')
             ui.label(info)
             ui.space()
-            YouTubeLink(app.storage.user['params']['st'])
+            YouTubeLink(app.storage.client['params']['st'])
 
 def set_icon_button(button_element,state):
     if state:
@@ -223,12 +223,12 @@ def set_icon_button(button_element,state):
         button_element.set_icon('lock_open')
 
 def lock_cat(button_element):
-    app.storage.user['cat_lock'] = not app.storage.user['cat_lock']
-    set_icon_button(button_element,app.storage.user['cat_lock'])
+    app.storage.client['cat_lock'] = not app.storage.client['cat_lock']
+    set_icon_button(button_element,app.storage.client['cat_lock'])
 
 def lock_lead(button_element):
-    app.storage.user['lead_lock'] = not app.storage.user['lead_lock']
-    set_icon_button(button_element,app.storage.user['lead_lock'])
+    app.storage.client['lead_lock'] = not app.storage.client['lead_lock']
+    set_icon_button(button_element,app.storage.client['lead_lock'])
 
 def common_header():
     global main_header
@@ -265,29 +265,29 @@ def common_header():
             with ui.icon('info',color='white', size='25px'):
                 ui.tooltip('About').props('delay="1000" anchor="center right" self="center left"')
 
-    ui.query('body').style(f'background-color: dark_page')
+    ui.query('body').style(f'background-color: dark_page text: xl')
     ui.colors(primary='#212121', secondary='#1D1D1D', accent="#FF0033", dark_page='#111111')
     ui.dark_mode(True)
 
 @ui.refreshable
 def gui_lead_header():
     global lead_lock_btn
-    app.storage.user['allow_try_again'] = True
+    app.storage.client['allow_try_again'] = True
     with ui.button(icon='lock_open', on_click=lambda: lock_lead(lead_lock_btn)).props('flat color=white') as lead_lock_btn:
         ui.tooltip('Lock Lead').props('delay="1000"')
-    with ui.select(label='Lead',options=list(config.lds[app.storage.user['cat']].keys()),\
-                   with_input=True,on_change=lambda: gui_lead_select()).bind_value(app.storage.user,'lead')\
+    with ui.select(label='Lead',options=list(config.lds[app.storage.client['cat']].keys()),\
+                   with_input=True,on_change=lambda: gui_lead_select()).bind_value(app.storage.client,'lead')\
                     .classes('w-500px text-white'):
         ui.tooltip('Lead').props('delay="1000"')
             
     gui_update_params.refresh()
 
 def gui_lead_select():
-    app.storage.user['params'] = search_parse.lead_select(app.storage.user['cat'],app.storage.user['lead'])
+    app.storage.client['params'] = search_parse.lead_select(app.storage.client['cat'],app.storage.client['lead'])
     gui_update_params.refresh()
 
 def gui_cat_select():
-    app.storage.user['lead'], app.storage.user['params'] = search_parse.cat_select(app.storage.user['cat'])
+    app.storage.client['lead'], app.storage.client['params'] = search_parse.cat_select(app.storage.client['cat'])
     gui_lead_header.refresh()
 
 @ui.page('/')
@@ -302,7 +302,7 @@ def main_page():
             ui.tooltip('Randomize').props('delay="1000"')
         with ui.button(icon='lock', on_click=lambda: lock_cat(cat_lock_btn)).props('flat color=white') as cat_lock_btn:
             ui.tooltip('Lock Category').props('delay="1000"')
-        with ui.select(options=list(config.cats),on_change=lambda: gui_cat_select()).bind_value(app.storage.user,'cat'):
+        with ui.select(options=list(config.cats),on_change=lambda: gui_cat_select()).bind_value(app.storage.client,'cat'):
             ui.tooltip('Category').props('delay="1000"')
         
         gui_lead_header()
@@ -310,7 +310,7 @@ def main_page():
         gui_update_params()
 
         ui.space()
-        with ui.number(label='Views',value=app.storage.user['lvt'],precision=0,min=0).bind_value(app.storage.user,'lvt').classes('max-w-15 disable-scrollbars'):
+        with ui.number(label='Views',value=app.storage.client['lvt'],precision=0,min=0).bind_value(app.storage.client,'lvt').classes('max-w-15 disable-scrollbars'):
             ui.tooltip('Max Viewcount').props('delay="1000"')
         with ui.button(icon='search',on_click=lambda e:gui_search_youtube(e.sender)).props('flat color=accent') as search_btn:
             ui.tooltip('Search').props('delay="1000"')
