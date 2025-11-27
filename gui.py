@@ -176,7 +176,6 @@ def main_page():
 
     @ui.refreshable
     def gui_update_params():
-        global date_picker, time_picker
         app.storage.user['params'] = search_parse.params(app.storage.user['cat'],app.storage.user['lead'])
         if app.storage.user['params']['rh']:
             for r in app.storage.user['params']['rh']:
