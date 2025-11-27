@@ -198,12 +198,13 @@ def main_page():
             else:
                 date_after = ''
             ui.date_input(label=f'Date{date_after}', value=date_picker)\
-                .bind_value(date_picker).classes('w-auto max-w-38').set_enabled(False)
+                .classes('w-auto max-w-38').set_enabled(False)
+            # .bind_value_from(date_picker)
 
         if app.storage.user['params']['time_eval'][0]:
             time_picker = app.storage.user['params']['time_eval'][1]
-            ui.time_input(label='Time', value=time_picker)\
-                .bind_value(time_picker).classes('max-w-32').set_enabled(False)
+            ui.time_input(label='Time', value=time_picker).classes('max-w-32').set_enabled(False)
+                # .bind_value_from(time_picker)\
     
     @ui.refreshable
     def gui_searched_term():
