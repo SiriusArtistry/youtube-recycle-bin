@@ -1,152 +1,181 @@
 import rand_gens as rg
 from re import findall
-import config, copy
+import config as cfg
 
-def params():
-    print('-'*40)
-    print("PAR: REFRESHING PARAMETERS...")
-    print(f'PAR: CURRENT CATEGORY: {config.cat}...')
-    config.cat_lds = config.lds[config.cat]
-    if not config.ld or config.ld not in list(config.cat_lds):
-      config.ld = rg.random_choice(config.cat_lds)
-    print(f'PAR: CURRENT LEAD: {config.ld}...')
-    config.date_eval = config.time_eval = False
-    config.st = copy.deepcopy(config.cat_lds[config.ld])
-    print(f'PAR: RAW SEARCH TERM: {config.st}')
-
-    if isinstance(config.st,list):
-        config.prm = config.st
-        config.st = config.st.pop(0)
-        print(f'PAR: PARAMETERS: {config.prm}')
+def params(cat, ld=False):
+    if cfg.VERBOSE: print('-'*40)
+    if cfg.VERBOSE: print("PAR: REFRESHING PARAMETERS...")
+    if cfg.VERBOSE: print(f'PAR: CURRENT CATEGORY: {cat}...')
+    cat_lds = cfg.lds[cat]
+    if not ld or ld not in list(cat_lds):
+      ld = rg.random_choice(cat_lds)
+    date_eval = time_eval = False
+    ld_v = cat_lds[ld]
+    if cfg.VERBOSE: print(f'PAR: CURRENT LEAD: {ld}: {ld_v}...')
+    if isinstance(ld_v,list):
+        prm = ld_v[1:]
+        ld_v = ld_v[0]        
+        if cfg.VERBOSE: print(f'PAR: PARAMETERS: {prm}')
     else:
-        config.prm = False
+        prm = False
 
-    hex_eval, config.rh = findall(r'\$+', config.st), []
+    hex_eval, rh = findall(r'\$+', ld_v), []
     if hex_eval:
         for n in range(len(hex_eval)):
-            config.rh.append(rg.rNh(len(hex_eval[n])))
-            print(f'PAR: RANDOM HEX FOR {hex_eval[n]}: {config.rh[n]}')
-            config.st = config.st.replace(str(hex_eval[n]),str(config.rh[n]))
+            rh.append(rg.rNh(len(hex_eval[n])))
+            if cfg.VERBOSE: print(f'PAR: RANDOM HEX FOR {hex_eval[n]}: {rh[n]}')
 
-    num_eval, config.rn = findall(r'\#+', config.st), []
+    num_eval, rn = findall(r'\#+', ld_v), []
     if num_eval:
         for n in range(len(num_eval)):
-            if config.prm:
-                config.rn.append(str(rg.ri(config.prm[n][0],config.prm[n][1])).zfill(len(str(config.prm[n][1]))))
+            if prm:
+                rn.append(str(rg.ri(prm[n][0],prm[n][1])).zfill(len(str(prm[n][1]))))
             else:
-                config.rn.append(rg.rNd(len(num_eval[n])))
+                rn.append(rg.rNd(len(num_eval[n])))
             
-            print(f'PAR: RANDOM NUMBER FOR {num_eval[n]}: {config.rn[n]}')
-            config.st = config.st.replace(num_eval[n],str(config.rn[n]))
+            if cfg.VERBOSE: print(f'PAR: RANDOM NUMBER FOR {num_eval[n]}: {rn[n]}')
     
-    year_eval = findall(r'Y{2,}',config.st)
-    if config.prm and year_eval:
-        rd_dt = rg.random_date(config.prm[0],"today")
-    elif config.cat == "low":
+    year_eval = findall(r'Y{2,}',ld_v)
+    if prm and year_eval:
+        rd_dt = rg.random_date(prm[0],"today")
+    elif cat == "low":
         rd_dt = rg.random_date("youtube",2008)
     else:
         rd_dt = rg.random_date("youtube","today")
 
     if year_eval:
-        config.date_eval = True
-        config.rd_y = rd_dt.year
-        print(f'PAR: RANDOM YEAR FOR {year_eval[0]}: {config.rd_y}')
-        config.st = config.st.replace(str(year_eval[0]),str(config.rd_y))
+        date_eval = True
+        rd_y = rd_dt.year
+        if cfg.VERBOSE: print(f'PAR: RANDOM YEAR FOR {year_eval[0]}: {rd_y}')
     else:
-        config.rd_y='2005'
+        rd_y='2005'
 
-    Mmonth_eval = findall(r'Month',config.st)
+    Mmonth_eval = findall(r'Month',ld_v)
     if Mmonth_eval:
-        config.date_eval = True
-        config.rd_mm = rd_dt.strftime("%B")
-        print(f'PAR: RANDOM MONTH NAME FOR {Mmonth_eval[0]}: {config.rd_mm}')
-        config.st = config.st.replace(str(Mmonth_eval[0]),str(config.rd_mm))
+        date_eval = True
+        rd_mm = rd_dt.strftime("%B")
+        if cfg.VERBOSE: print(f'PAR: RANDOM MONTH NAME FOR {Mmonth_eval[0]}: {rd_mm}')
     else:
-        config.rd_mm = 'April'
+        rd_mm = 'April'
 
-    month_eval = findall(r'M{2}',config.st)
+    month_eval = findall(r'M{2}',ld_v)
     if month_eval:
-        config.date_eval = True
-        config.rd_m = str(rd_dt.month).zfill(len(month_eval[0]))
-        print(f'PAR: RANDOM MONTH FOR {month_eval[0]}: {config.rd_m}')
-        config.st = config.st.replace(str(month_eval[0]),str(config.rd_m))
+        date_eval = True
+        rd_m = str(rd_dt.month).zfill(len(month_eval[0]))
+        if cfg.VERBOSE: print(f'PAR: RANDOM MONTH FOR {month_eval[0]}: {rd_m}')
     else:
-        config.rd_m = '04'
+        rd_m = '04'
 
-    day_eval = findall(r'D{2}',config.st)
+    day_eval = findall(r'D{2}',ld_v)
     if day_eval:
-        config.date_eval = True
-        config.rd_d = str(rd_dt.day).zfill(len(day_eval[0]))
-        print(f'PAR: RANDOM DAY FOR {day_eval[0]}: {config.rd_d}')
-        config.st = config.st.replace(str(day_eval[0]),str(config.rd_d))
+        date_eval = True
+        rd_d = str(rd_dt.day).zfill(len(day_eval[0]))
+        if cfg.VERBOSE: print(f'PAR: RANDOM DAY FOR {day_eval[0]}: {rd_d}')
     else:
-        config.rd_d = '23'
+        rd_d = '23'
 
-    hour_eval = findall(r'H{2}',config.st)
+    hour_eval = findall(r'H{2}',ld_v)
     if hour_eval:
-        config.time_eval = True
-        config.rd_h = str(rd_dt.hour).zfill(len(hour_eval[0]))
-        print(f'PAR: RANDOM HOUR FOR {hour_eval[0]}: {config.rd_h}')
-        config.st = config.st.replace(str(hour_eval[0]),str(config.rd_h))
+        time_eval = True
+        rd_h = str(rd_dt.hour).zfill(len(hour_eval[0]))
+        if cfg.VERBOSE: print(f'PAR: RANDOM HOUR FOR {hour_eval[0]}: {rd_h}')
     else:
-        config.rd_h = '10'
+        rd_h = '10'
 
-    minute_eval = findall(r'(?:Mi){2}',config.st)
+    minute_eval = findall(r'(?:Mi){2}',ld_v)
     if minute_eval:
-        config.time_eval = True
-        config.rd_mi = str(rd_dt.minute).zfill(int(len(minute_eval[0])/2))
-        print(f'PAR: RANDOM MINUTE FOR {minute_eval[0]}: {config.rd_mi}')
-        config.st = config.st.replace(str(minute_eval[0]),str(config.rd_mi))
+        time_eval = True
+        rd_mi = str(rd_dt.minute).zfill(int(len(minute_eval[0])/2))
+        if cfg.VERBOSE: print(f'PAR: RANDOM MINUTE FOR {minute_eval[0]}: {rd_mi}')
     else:
-        config.rd_mi = '27'
+        rd_mi = '27'
 
-    second_eval = findall(r'S{2}',config.st)
+    second_eval = findall(r'S{2}',ld_v)
     if second_eval:
-        config.time_eval = True
-        config.rd_s = str(rd_dt.second).zfill(len(second_eval[0]))
-        print(f'PAR: RANDOM SECOND FOR {second_eval[0]}: {config.rd_s}')
-        config.st = config.st.replace(str(second_eval[0]),str(config.rd_s))
+        time_eval = True
+        rd_s = str(rd_dt.second).zfill(len(second_eval[0]))
+        if cfg.VERBOSE: print(f'PAR: RANDOM SECOND FOR {second_eval[0]}: {rd_s}')
     else:
-        config.rd_s = str(rg.ri(0,59)).zfill(2)
+        rd_s = str(rg.ri(0,59)).zfill(2)
 
-    if config.date_eval:
-        config.date_picker = f'{str(config.rd_y)}-{str(config.rd_m)}-{str(config.rd_d)}'
-        if Mmonth_eval: config.rd_mm=rd_dt.strftime("%m")
+    if date_eval:
+        date_picker = f'{str(rd_y)}-{str(rd_m)}-{str(rd_d)}'
+        if Mmonth_eval: rd_mm=rd_dt.strftime("%m")
+    else: date_picker = ''
 
-    if config.time_eval:
-        config.time_picker = f'{str(config.rd_h)}:{str(config.rd_mi)}'
+    if time_eval:
+        time_picker = f'{str(rd_h)}:{str(rd_mi)}'
+    else: time_picker = ''
     
-    print(f'PAR: NEW SEARCH TERM: {config.st}')
+    term_params = {"rh": rh,"rn": rn,"prm":prm,
+                   "hex_eval":hex_eval,"num_eval":num_eval,
+                   "date_eval":[date_eval, year_eval, Mmonth_eval, month_eval, day_eval],
+                   "time_eval":[time_eval, hour_eval, minute_eval, second_eval],
+                   "date":[rd_y,rd_mm,rd_m,rd_d],"time":[rd_h,rd_mi,rd_s]}
+    
+    st = search_term(cat, ld, term_params)
 
+    gui_params =  {"st":st,"rh": rh,"rn": rn,"prm":prm,
+                "date_eval": [date_eval,date_picker],"time_eval": [time_eval,time_picker]}
+    
+    return gui_params
+
+def search_term(cat, ld, params):
+    st = cfg.lds[cat][ld]
+    if cfg.VERBOSE: print(f'PAR: RAW SEARCH TERM: {st}')
+    if isinstance(st,list):
+        prm = st[1:]
+        st = st[0]
+        if cfg.VERBOSE: print(f'PAR: PARAMETERS: {prm}')
+    else:
+        prm = False
+
+    if params['hex_eval']:
+        for n in range(len(params['hex_eval'])):
+            st = st.replace(str(params['hex_eval'][n]),str(params['rh'][n]))
+    if params['num_eval']:
+        for n in range(len(params['num_eval'])):
+            st = st.replace(params['num_eval'][n],str(params['rn'][n]))
+
+    if params['date_eval'][0]:
+        for i in range(1,5):
+            if params['date_eval'][i]:
+                st = st.replace(str(params['date_eval'][i][0]),str(params['date'][i-1]))
+
+    if params['time_eval'][0]:
+        for i in range(1,4):
+            if params['time_eval'][i]:
+                st = st.replace(str(params['time_eval'][i][0]),str(params['time'][i-1]))
+
+    if cfg.VERBOSE: print(f'PAR: NEW SEARCH TERM: {st}')
+    return st
+
+
+def lead_select(cat, lead):
+    return (params(cat,lead))
 
 def cat_select(cat):
-    print('^'*40)
-    config.cat = cat
-    config.cat_lds = config.lds[cat]
-    print(f'PAR: SELECTED CATEGORY: {config.cat}...')
-    config.cat_key = config.cat_lds.keys()
-    if not config.ld or config.ld not in list(config.cat_key):
-        config.ld = rg.random_choice(config.cat_lds)
-        print(f'PAR: FORCED RANDOM LEAD FROM \'{config.cat}\': \"{config.ld}\"...')
-    params()
-
-def lead_select(lead):
-    print('^'*40)
-    config.ld = lead
-    print(f'PAR: SELECTED LEAD: {config.ld}...')
-    params()
+    if cfg.VERBOSE: print('^'*40)
+    cat_lds = cfg.lds[cat]
+    if cfg.VERBOSE: print(f'PAR: SELECTED CATEGORY: {cat}...')
+    ld = rg.random_choice(cat_lds)
+    if cfg.VERBOSE: print(f'PAR: FORCED RANDOM LEAD FROM \'{cat}\': \"{ld}\"...') 
+    return ld, params(cat,ld)
 
 def randomize_cat():
-    print('?'*40)
-    config.cat = list(config.cats)[(rg.ri(0,len(list(config.cats))-1))]
-    print(f'PAR: RANDOM CATEGORY: {config.cat}...')
-    config.ld = rg.random_choice(config.cat_lds)
-    print(f'PAR: RANDOM LEAD: {config.ld}...')
-    params()
+    if cfg.VERBOSE: print('?'*40)
+    cat = list(cfg.cats)[(rg.ri(0,len(list(cfg.cats))-1))]
+    if cfg.VERBOSE: print(f'PAR: RANDOM CATEGORY: {cat}...')
+    cat_lds = cfg.lds[cat]
+    ld = rg.random_choice(cat_lds)
+    if cfg.VERBOSE: print(f'PAR: RANDOM LEAD: {ld}...')
+    return cat, ld, params(cat, ld)
 
-def randomize_lead():
-    print('?'*40)
-    config.cat_lds = config.lds[config.cat]
-    config.ld = rg.random_choice(config.cat_lds)
-    print(f'PAR: RANDOM LEAD FROM \'{config.cat}\': \"{config.ld}\"...')
-    params()
+def randomize_lead(cat):
+    if cfg.VERBOSE: print('?'*40)
+    if not cat in cfg.lds:
+        cat = list(cfg.cats)[(rg.ri(0,len(list(cfg.cats))-1))]
+    cat_lds = cfg.lds[cat]
+    ld = rg.random_choice(cat_lds)
+    if cfg.VERBOSE: print(f'PAR: RANDOM LEAD FROM \'{cat}\': \"{ld}\"...')
+    return ld, params(cat,ld)

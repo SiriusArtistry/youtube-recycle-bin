@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-working_dir = getenv('WORKING_DIR','docs')
+WORKING_DIR = getenv('WORKING_DIR','docs')
 
 def load(fl,t='file'):
     if t=='file':
@@ -26,10 +26,10 @@ def save(fl,ti='docs/result'):
         json.dump(fl, file, indent=4)
 
 def leads():
-    return(load(f'{working_dir}/leads.json','file'))
+    return(load(f'{WORKING_DIR}/leads.json','file'))
 
 def readme():
-    fl = f'{working_dir}/README.md'
+    fl = f'{WORKING_DIR}/README.md'
     try:
         with open(fl, "r", encoding="utf-8") as file:
             readme_content = file.read()
