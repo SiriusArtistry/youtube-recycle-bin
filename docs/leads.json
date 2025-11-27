@@ -35,7 +35,8 @@
         "Com Oculus Vrshell (VR Headset)":"\"Com Oculus Vrshell\"",
         "Com Oculus Metacam (VR Headset)":"\"Com Oculus Metacam\"",
         "Desktop (Game Capture)":"Desktop YYYY MM DD",
-        "Movie Maker (Video Editor)":"\"trial 0\""
+        "Movie Maker (Video Editor)":"\"trial 0\"",
+        "XRecorder (Screen Recorder)":["XRecorder DDMMYYYY HHMiMiSS",2019]
     },
     "old":{
         "IMG":"IMG ####",
@@ -102,7 +103,9 @@
         "REC (Drone/Dashcam)":["REC ####",[0,1000]],
         "Clip (Misc)":"Clip##",
         "[Day Month Year] (Misc)":"DD Month YYYY",
-        "VLC Record (Game Capture/Misc)":"vlc record YYYY MM DD"
+        "VLC Record (Game Capture/Misc)":"vlc record YYYY MM DD",
+        "HUNT (Trailcam)":"HUNT####",
+        "IMAG (Trailcam)":"IMAG####"
     },
     "low":{
         "You have new picture mail! (Phone)":"\"You have new picture mail! (video)\"",
@@ -118,5 +121,8 @@
         "Video0 (Camera)":["Video0##",[0,10]],
         "Vide0 (Camera)":["Vid0##",[0,10]],
         "MOV000 (Camera)":["MOV000##",[0,10]]
+    },
+    "weird":{
+        "GUID v4 (Smartphone)":"4$$$"
     }
 }
