@@ -294,6 +294,7 @@ def gui_cat_select():
 def main_page():
     # global main_header
     print('.'*40+'\nGUI: MAIN PAGE')
+    print(f'USER: {app.storage.browser['id']}')
     gui_init()
     common_header()
     with main_header:
@@ -326,8 +327,10 @@ def about_page():
         ui.space()
         with ui.button(icon='search',on_click=lambda: ui.navigate.to('/')).props('flat color=accent'):
             ui.tooltip('Search').props('delay="1000"')
-    with ui.column().classes('justify-center'):
+    with ui.column().classes('justify-center h-full'):
         ui.markdown(json_file.readme())
+        ui.space()
+        ui.label(app.storage.browser['id']).style('color: gray')
 
 print(f'GUI: Running in environment \'{ENVIRONMENT}\'')
 if not ENVIRONMENT == 'local':
