@@ -59,7 +59,7 @@ def gui_init():
     if config.lds:
         print("GUI: FOUND LEADS...")
         if 'results'    not in app.storage.user: app.storage.user['results'] = False
-        if 'last_search'not in app.storage.user: app.storage.user['last_search'] = False
+        if 'last_search'not in app.storage.user: app.storage.user['last_search'] = [0,0,0]
         if 'cat'        not in app.storage.user: app.storage.user['cat']     = 'old'
         if 'lvt'        not in app.storage.user: app.storage.user['lvt']     = 100
         app.storage.user['lead'], app.storage.user['params'] = search_parse.randomize_lead(app.storage.user['cat'])
@@ -209,9 +209,9 @@ def main_page():
     
     @ui.refreshable
     def gui_searched_term():
-        if app.storage.user['last_search']:
+        if int(app.storage.user['last_search'][0])>0:
             with ui.row().classes(replace='row items-center w-[100%] no-wrap').style('margin: 0; padding: 0; display: flex;'):
-                info = app.storage.user['last_search'][0]
+                info = f'Found {app.storage.user['last_search'][0]} videos matching \'{app.storage.user['last_search'][1]}\' with less than {format(app.storage.user['last_search'][2],',')} views...\t'
                 info = info.replace('less than 0','no').replace('1 videos', '1 video')
                 ui.label(info)
                 ui.space()
@@ -256,11 +256,11 @@ def main_page():
                     ui.space()
                     ui.icon('help_outline', size='xl').style('color: gray')
                     with ui.row(wrap=False):
-                        info = f'Nothing here for \'{app.storage.user['params']['st']}\' with less than {format(int(app.storage.user['lvt']),',')} views...\t'
+                        info = f'Nothing here for \'{app.storage.user['last_search'][1]}\' with less than {format(app.storage.user['last_search'][2],',')} views...\t'
                         info = info.replace('less than 0','no').replace('1 videos', '1 video')
                         ui.label(info).style('color: gray').classes('w-3/5 justify-center')
                         ui.space()
-                        YouTubeLink(app.storage.user['params']['st'])
+                        YouTubeLink(app.storage.user['last_search'][1])
                     with ui.row() as try_again_row:
                         ui.button('Try Again',on_click=lambda e: gui_try_again(e.sender)).classes('w-40px justify-self-center').set_enabled(app.storage.user['allow_try_again'])
 
@@ -271,7 +271,7 @@ def main_page():
             except (ConnectionError, KeyError):
                 ui.navigate.to('/rate-limit')
             gui_load_cards.refresh()
-            app.storage.user['last_search'] = [f'Found {len(app.storage.user['results'])} videos matching \'{app.storage.user['params']['st']}\' with less than {format(int(app.storage.user['lvt']),',')} views...\t',app.storage.user['params']['st']]
+            app.storage.user['last_search'] = [len(app.storage.user['results']),app.storage.user['params']['st'],int(app.storage.user['lvt'])]
             gui_searched_term.refresh()
 
     async def gui_try_again(button: ui.button) -> list:
@@ -284,7 +284,7 @@ def main_page():
                 app.storage.user['results'] = await run.cpu_bound(search_youtube.try_again,app.storage.user['cat'], app.storage.user['params']['st'], app.storage.user['lvt'])
             except (ConnectionError, KeyError):
                 ui.navigate.to('/rate-limit')
-            app.storage.user['last_search'] = [f'Found {len(app.storage.user['results'])} videos matching \'{app.storage.user['params']['st']}\' with less than {format(int(app.storage.user['lvt']),',')} views...\t',app.storage.user['params']['st']]
+            app.storage.user['last_search'] = [len(app.storage.user['results']),app.storage.user['params']['st'],int(app.storage.user['lvt'])]
             gui_load_cards.refresh()
 
     def gui_randomize():
