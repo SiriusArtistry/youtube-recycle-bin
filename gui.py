@@ -22,6 +22,7 @@ TITLE = 'YouTube Recycle Bin'
 @app.on_page_exception
 def timeout_error_page(exception: Exception) -> None:
     common_header()
+    gui_style()
     with ui.column().classes('absolute-center items-center gap-8 w-auto'):
         ui.icon('error_outline', size='xl').style('color: gray')
         ui.label(f'Encountered an issue...').classes('text-2xl').style('color: gray')
@@ -30,6 +31,7 @@ def timeout_error_page(exception: Exception) -> None:
 
 @ui.page('/no-lead')
 def raise_filenotfound_error():
+    gui_style()
     if not config.lds:
        raise FileNotFoundError('Could not find leads file in \'{working_dir}\'...')
     else:
@@ -37,10 +39,12 @@ def raise_filenotfound_error():
 
 @ui.page('/rate-limit')
 def raise_ratelimit_error():
+    gui_style()
     raise ConnectionError('Couldn\'t reach YouTube...')
 
 @ui.page('/search-error')
 def raise_search_error():
+    gui_style()
     if 'params' not in app.storage.user or not app.storage.user['params']['st']:
         gui_init()
         raise TypeError(f'Had trouble using lead \'{app.storage.user['lead']}\'...')
@@ -55,9 +59,14 @@ def disable(button: ui.button):
     finally:
         button.enable()
 
+def gui_style():
+    ui.query('body').style(f'background-color: dark_page text: xl')
+    ui.colors(primary='#212121', secondary='#1D1D1D', accent="#FF0033", dark_page='#111111')
+    ui.dark_mode(True)
+
 def gui_init():
     if config.lds:
-        print("GUI: FOUND LEADS...")
+        if VERBOSE: print("GUI: FOUND LEADS...")
         if 'results'    not in app.storage.user: app.storage.user['results'] = False
         if 'last_search'not in app.storage.user: app.storage.user['last_search'] = [0,0,0]
         if 'cat'        not in app.storage.user: app.storage.user['cat']     = 'old'
@@ -135,15 +144,11 @@ def common_header():
             with ui.icon('info',color='white', size='25px'):
                 ui.tooltip('About').props('delay="1000" anchor="center right" self="center left"')
 
-    ui.query('body').style(f'background-color: dark_page text: xl')
-    ui.colors(primary='#212121', secondary='#1D1D1D', accent="#FF0033", dark_page='#111111')
-    ui.dark_mode(True)
-
 @ui.page('/')
 def main_page():
-    print('.'*40+'\nGUI: MAIN PAGE')
-    print(f'USER: {app.storage.browser['id']}')
-
+    if VERBOSE: print('.'*40+'\nGUI: MAIN PAGE')
+    if VERBOSE: print(f'USER: {app.storage.browser['id']}')
+    gui_style()
     gui_init()
     common_header()
 
@@ -221,7 +226,7 @@ def main_page():
     def gui_load_cards():
         global try_again_row
         if app.storage.user['results'] and isinstance(app.storage.user['results'],list):
-            print(f"GUI: FETCHING RESULTS...")
+            if VERBOSE: print(f"GUI: FETCHING RESULTS...")
             for result in app.storage.user['results']:
                 if result['thumbnails']:
                     tmb = result['thumbnails'][0]
@@ -245,13 +250,13 @@ def main_page():
                             ui.label(ds)
         else:
             if app.storage.user['results'] == False or not isinstance(app.storage.user['results'],list):
-                print(f"GUI: NO RESULTS, NEW INSTANCE...")
+                if VERBOSE: print(f"GUI: NO RESULTS, NEW INSTANCE...")
                 with ui.column().classes('absolute-center w-3/4'):
                     ui.space()
                     ui.label('Welcome to the YouTube Recycle Bin').style('font-size: 200%')
                     ui.label('🎲 Randomize and 🔎 Search to get started...')
             else:
-                print(f"GUI: NO RESULTS, NO MATCH...")
+                if VERBOSE: print(f"GUI: NO RESULTS, NO MATCH...")
                 with ui.column().classes('absolute-center w-7/8').style(replace=''):
                     ui.space()
                     ui.icon('help_outline', size='xl').style('color: gray')
@@ -289,7 +294,7 @@ def main_page():
 
     def gui_randomize():
         app.storage.user['allow_try_again'] = True
-        print('?'*40+'\nGUI: RANDOMIZING...')
+        if VERBOSE: print('?'*40+'\nGUI: RANDOMIZING...')
         if not app.storage.user['cat_lock']:
             app.storage.user['lead_lock'] = False
             app.storage.user['cat'], app.storage.user['lead'], app.storage.user['params'] = search_parse.randomize_cat()
@@ -326,6 +331,7 @@ def main_page():
 
 @ui.page('/about')
 def about_page():
+    gui_style()
     common_header()
     with main_header:
         ui.space()
@@ -336,7 +342,7 @@ def about_page():
         ui.space()
         ui.label(app.storage.browser['id']).style('color: gray')
 
-print(f'GUI: Running in environment \'{ENVIRONMENT}\'')
+if VERBOSE: print(f'GUI: Running in environment \'{ENVIRONMENT}\'')
 if not ENVIRONMENT == 'local':
     ui.run_with(app,title=TITLE,favicon='♻️',storage_secret=TITLE)
 else:
