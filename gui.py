@@ -344,6 +344,6 @@ def about_page():
 
 if VERBOSE: print(f'GUI: Running in environment \'{ENVIRONMENT}\'')
 if not ENVIRONMENT == 'local':
-    ui.run_with(app,title=TITLE,favicon='♻️',storage_secret=TITLE)
+    ui.run_with(app,title=TITLE,favicon='♻️',storage_secret=TITLE,reload=False)
 else:
     ui.run(title=TITLE,storage_secret=TITLE)
