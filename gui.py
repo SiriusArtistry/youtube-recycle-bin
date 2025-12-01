@@ -1,4 +1,4 @@
-import config, os, search_parse, search_youtube, json_file
+import config, os, search_parse, search_youtube, json_file, device_info
 from nicegui import app, ui, run
 from dotenv import load_dotenv
 from contextlib import contextmanager
@@ -126,7 +126,8 @@ def common_header():
             }
         </style>
             ''')
-    with ui.header().classes(replace='gap-4 row items-center min-h-14 px-4 grid-rows-1 grid-flow-col absolue-full') as main_header:
+    reveal = 'reveal' if device_info.is_mobile() else ''
+    with ui.header().props(f'{reveal}').classes(replace='gap-4 row items-center min-h-14 px-4 grid-rows-1 grid-flow-col absolue-full') as main_header:
         ui.button(on_click=lambda: left_drawer.toggle(), icon='menu').props('flat color=white').classes('md:px-0')
         # ui.label('YouTube Recycle Bin')
         with ui.link(target='/'):
@@ -341,9 +342,10 @@ def about_page():
         ui.markdown(json_file.readme())
         ui.space()
         ui.label(app.storage.browser['id']).style('color: gray')
+        ui.label(device_info.get_device_info()).style('color: gray')
 
 if VERBOSE: print(f'GUI: Running in environment \'{ENVIRONMENT}\'')
 if not ENVIRONMENT == 'local':
-    ui.run_with(app,title=TITLE,favicon='♻️',storage_secret=TITLE,reload=False)
+    ui.run_with(app,title=TITLE,favicon='♻️',storage_secret=TITLE)
 else:
     ui.run(title=TITLE,storage_secret=TITLE)
