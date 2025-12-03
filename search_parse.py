@@ -13,11 +13,11 @@ def params(cat, ld=False):
     ld_v = cat_lds[ld]
     if cfg.VERBOSE: print(f'PAR: CURRENT LEAD: {ld}: {ld_v}...')
     if isinstance(ld_v,list):
-        prm = ld_v[1:]
+        prm = ld_v[1]
         ld_v = ld_v[0]        
         if cfg.VERBOSE: print(f'PAR: PARAMETERS: {prm}')
     else:
-        prm = False
+        prm = {}
 
     hex_eval, rh = findall(r'\$+', ld_v), []
     if hex_eval:
@@ -28,20 +28,29 @@ def params(cat, ld=False):
     num_eval, rn = findall(r'\#+', ld_v), []
     if num_eval:
         for n in range(len(num_eval)):
-            if prm:
-                rn.append(str(rg.ri(prm[n][0],prm[n][1])).zfill(len(str(prm[n][1]))))
+            if 'between' in prm:
+                if any(isinstance(el, list) for el in prm['between']):
+                    A = prm['between'][n][0]
+                    B = prm['between'][n][1]
+                else:
+                    A = prm['between'][0]
+                    B = prm['between'][1]
+                rn.append(str(rg.ri(A,B)).zfill(len(str(B))))
             else:
                 rn.append(rg.rNd(len(num_eval[n])))
             
             if cfg.VERBOSE: print(f'PAR: RANDOM NUMBER FOR {num_eval[n]}: {rn[n]}')
     
     year_eval = findall(r'Y{2,}',ld_v)
-    if prm and year_eval:
-        rd_dt = rg.random_date(prm[0],"today")
-    elif cat == "low":
-        rd_dt = rg.random_date("youtube",2008)
-    else:
-        rd_dt = rg.random_date("youtube","today")
+    A, B = "youtube", "today"
+    if 'after' in prm and year_eval:
+        A = prm['after']
+    if 'before' in prm and year_eval:
+        B = prm['before']
+    if cat == "low":
+        B = 2008
+    
+    rd_dt = rg.random_date(A,B)
 
     if year_eval:
         date_eval = True
@@ -124,11 +133,11 @@ def search_term(cat, ld, params):
     st = cfg.lds[cat][ld]
     if cfg.VERBOSE: print(f'PAR: RAW SEARCH TERM: {st}')
     if isinstance(st,list):
-        prm = st[1:]
+        prm = st[1]
         st = st[0]
         if cfg.VERBOSE: print(f'PAR: PARAMETERS: {prm}')
     else:
-        prm = False
+        prm = {}
 
     if params['hex_eval']:
         for n in range(len(params['hex_eval'])):

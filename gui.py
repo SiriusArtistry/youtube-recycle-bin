@@ -68,11 +68,11 @@ def gui_init():
     if config.lds:
         if VERBOSE: print("GUI: FOUND LEADS...")
         if 'results'    not in app.storage.user: app.storage.user['results'] = False
-        if 'last_search'not in app.storage.user: app.storage.user['last_search'] = [0,0,0]
+        if 'last_search'not in app.storage.user: app.storage.user['last_search'] = [0,"",0]
         if 'cat'        not in app.storage.user: app.storage.user['cat']     = 'old'
         if 'lvt'        not in app.storage.user: app.storage.user['lvt']     = 100
         app.storage.user['lead'], app.storage.user['params'] = search_parse.randomize_lead(app.storage.user['cat'])
-        app.storage.user['allow_try_again'] = app.storage.user['allow_search'] = app.storage.user['cat_lock'] = True
+        app.storage.user['allow_try_again'], app.storage.user['allow_search'], app.storage.user['cat_lock'] = True, True, True
         app.storage.user['lead_lock'] = False
     else:
         ui.navigate.to('/no-lead')
@@ -190,8 +190,15 @@ def main_page():
 
         if app.storage.user['params']['rn']:
             for r in app.storage.user['params']['rn']:
-                if app.storage.user['params']['prm']:
-                    rmin, rmax = app.storage.user['params']['prm'][0][0], app.storage.user['params']['prm'][0][1]
+                if 'between' in app.storage.user['params']['prm']:
+                    b = app.storage.user['params']['prm']['between']
+                    if any(isinstance(el, list) for el in b):
+                        A = b[r][0]
+                        B = b[r][1]
+                    else:
+                        A = b[0]
+                        B = b[1]
+                    rmin, rmax = A, B
                 else:
                     rmin = 0
                     rmax = 9999
@@ -200,12 +207,12 @@ def main_page():
 
         if app.storage.user['params']['date_eval'][0]:
             date_picker = app.storage.user['params']['date_eval'][1]
-            if app.storage.user['params']['prm']:
-                date_after = f' (after {app.storage.user['params']['prm'][0]})'
+            if 'after' in app.storage.user['params']['prm']:
+                date_after = f' (after {app.storage.user['params']['prm']['after']})'
             else:
                 date_after = ''
             ui.date_input(label=f'Date{date_after}', value=date_picker)\
-                .classes('w-auto max-w-38').set_enabled(False)
+                .classes('w-auto max-w-38').set_enabled(False)\
             # .bind_value_from(date_picker)
 
         if app.storage.user['params']['time_eval'][0]:

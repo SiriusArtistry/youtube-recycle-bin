@@ -1,5 +1,5 @@
 # Ported by Matt Sullivan http://sullerton.com/2011/03/django-mobile-browser-detection-middleware/
-import re
+import re, config
 from nicegui import ui, app
 
 reg_b = re.compile(r"(android|bb\\d+|meego).+mobile|avantgo|bada\\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\\.(browser|link)|vodafone|wap|windows ce|xda|xiino", re.I|re.M)
@@ -15,8 +15,8 @@ def is_mobile():
     b = reg_b.search(device)
     v = reg_v.search(device[0:4])
     if b or v:
-        print("DVI: USING MOBILE DEVICE")
+        if config.VERBOSE: print("DVI: USING MOBILE DEVICE")
         return True
     else:
-        print("DVI: NOT USING MOBILE DEVICE")
+        if config.VERBOSE: print("DVI: NOT USING MOBILE DEVICE")
         return False
