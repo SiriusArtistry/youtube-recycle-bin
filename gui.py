@@ -6,9 +6,9 @@ from contextlib import contextmanager
 
 print('\n'*20)
 print('*'*40+'\nGUI: STARTING APPLICATION...\n'+'*'*40)
+VERBOSE = config.VERBOSE
 try:
     config.init()
-    VERBOSE = config.VERBOSE
 except (TypeError, AttributeError):
     ui.navigate.to('/no-lead')
 
