@@ -16,7 +16,6 @@ except (TypeError, AttributeError):
 load_dotenv()
 ENVIRONMENT = os.getenv('ENVIRONMENT','local')
 WORKING_DIR = os.getenv('WORKING_DIR','docs')
-PORT        = os.getenv('PORT','8080')
 app.add_static_files(f"/docs", f"{WORKING_DIR}")
 
 TITLE = 'YouTube Recycle Bin'
@@ -355,6 +354,6 @@ def about_page():
 
 if VERBOSE: print(f'GUI: Running in environment \'{ENVIRONMENT}\'')
 if not ENVIRONMENT == 'local':
-    ui.run_with(app,title=TITLE,favicon='/docs/favicon.ico',storage_secret=TITLE,port=PORT)
+    ui.run_with(app,title=TITLE,favicon='/docs/favicon.ico',storage_secret=TITLE)
 else:
     ui.run(title=TITLE,storage_secret=TITLE)
