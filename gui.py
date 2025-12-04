@@ -13,6 +13,9 @@ except (TypeError, AttributeError):
     VERBOSE = True
     ui.navigate.to('/no-lead')
 
+wd = os.getcwd()
+print(f'GUI: ROOT DIRECTORY: {wd}')
+
 load_dotenv()
 ENVIRONMENT = os.getenv('ENVIRONMENT','local')
 WORKING_DIR = os.getenv('WORKING_DIR','docs')
