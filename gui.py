@@ -15,6 +15,7 @@ except (TypeError, AttributeError):
 
 wd = os.getcwd()
 print(f'GUI: ROOT DIRECTORY: {wd}')
+print(f'GUI: FILES IN ROOT: {os.listdir(wd)}')
 
 load_dotenv()
 ENVIRONMENT = os.getenv('ENVIRONMENT','local')
