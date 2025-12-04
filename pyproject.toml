@@ -12,6 +12,7 @@ dependencies = [
   "pydantic==2.12.3",
   "pydantic-core==2.41.4",
   "youtube-search==2.1.2",
+  "python-dotenv==1.0.1"
 ]
 [project.scripts]
 app = "gui:app"
