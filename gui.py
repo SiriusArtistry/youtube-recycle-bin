@@ -190,12 +190,14 @@ def main_page():
                 ui.input(label='X'*len(r),value=r).classes('max-w-15').set_enabled(False)
 
         if app.storage.user['params']['rn']:
+            i=0
             for r in app.storage.user['params']['rn']:
                 if 'between' in app.storage.user['params']['prm']:
                     b = app.storage.user['params']['prm']['between']
                     if any(isinstance(el, list) for el in b):
-                        A = b[r][0]
-                        B = b[r][1]
+                        A = b[i][0]
+                        B = b[i][1]
+                        i+=1
                     else:
                         A = b[0]
                         B = b[1]
