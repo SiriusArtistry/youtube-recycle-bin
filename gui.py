@@ -15,8 +15,7 @@ except (TypeError, AttributeError):
 
 load_dotenv()
 ENVIRONMENT = os.getenv('ENVIRONMENT','local')
-WORKING_DIR = os.getenv('WORKING_DIR','docs')
-app.add_static_files(f"/docs", f"{WORKING_DIR}")
+WORKING_DIR = os.getenv('WORKING_DIR','public')
 
 TITLE = 'YouTube Recycle Bin'
 
@@ -34,7 +33,7 @@ def timeout_error_page(exception: Exception) -> None:
 def raise_filenotfound_error():
     gui_style()
     if not config.lds:
-       raise FileNotFoundError('Could not find leads file in \'{working_dir}\'...')
+       raise FileNotFoundError(f'Could not find leads file in \'{WORKING_DIR}\'...')
     else:
         ui.navigate.to('/')
 
@@ -90,7 +89,7 @@ class YouTubeLink(ui.link):
                 margin-left: 0.25em;
 
                 background-size: 100%;
-                background-image: url("docs/external-link-26.png");
+                background-image: url('/external-link-26.png');
                 filter: invert(100%);
             }
         ''')
@@ -132,7 +131,7 @@ def common_header():
         ui.button(on_click=lambda: left_drawer.toggle(), icon='menu').props('flat color=white').classes('md:px-0')
         # ui.label('YouTube Recycle Bin')
         with ui.link(target='/'):
-            ui.interactive_image('/docs/YTRB_logo_beta.png').style('max-width: 100px').classes('display:block')
+            ui.interactive_image(f'/{WORKING_DIR}/YTRB_logo_beta.png').style('max-width: 100px').classes('display:block')
 
     with ui.left_drawer(value=False).classes('bg-dark disable-scrollbar').props('width=60') as left_drawer:
         ui.space()
@@ -140,7 +139,7 @@ def common_header():
             with ui.interactive_image('https://nicegui.io/logo.png').classes('w-full h-auto invert'):
                 ui.tooltip('Built with NiceGUI').props('delay="1000" anchor="center right" self="center left"')
         with ui.link(target='https://github.com/SiriusArtistry/youtube-recycle-bin',new_tab=True):
-            with ui.interactive_image('/docs/github-mark-white.png').classes('w-full h-auto'):
+            with ui.interactive_image(f'/{WORKING_DIR}/github-mark-white.png').classes('w-full h-auto'):
                 ui.tooltip('Source code on Github').props('delay="1000" anchor="center right" self="center left"')
         with ui.link(target='/about'):
             with ui.icon('info',color='white', size='25px'):
@@ -356,6 +355,7 @@ def about_page():
 
 if VERBOSE: print(f'GUI: Running in environment \'{ENVIRONMENT}\'')
 if not ENVIRONMENT == 'local':
-    ui.run_with(app,title=TITLE,favicon='/docs/favicon.ico',storage_secret=TITLE)
+    app.add_static_files(f"/{WORKING_DIR}", f"{WORKING_DIR}")
+    ui.run_with(app,title=TITLE,favicon=f'/{WORKING_DIR}/favicon.ico',storage_secret=TITLE)
 else:
     ui.run(title=TITLE,storage_secret=TITLE)

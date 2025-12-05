@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-WORKING_DIR = getenv('WORKING_DIR','docs')
+WORKING_DIR = getenv('WORKING_DIR','public')
 
 def load(fl,t='file'):
     if t=='file':
@@ -21,7 +21,7 @@ def load(fl,t='file'):
     else:
         return json.loads(fl)
     
-def save(fl,ti='docs/result'):
+def save(fl,ti=f'{WORKING_DIR}/result'):
     with open(ti+'.json', "w") as file:
         json.dump(fl, file, indent=4)
 
