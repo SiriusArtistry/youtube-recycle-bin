@@ -1,5 +1,4 @@
-import json
-import os
+import json,os
 
 BACKEND_DIR = os.environ.get('BACKEND_DIR','docs/')
 
@@ -23,13 +22,15 @@ def save(fl,ti=f'{BACKEND_DIR}result'):
         json.dump(fl, file, indent=4)
 
 def leads():
-    print("JF: CURRENT DIR: "+ os. getcwd())
-    return(load(f'{BACKEND_DIR}leads.json','file'))
+    fl = f'{BACKEND_DIR}leads.json'
+    path = os.path.join(os. getcwd(), fl)
+    return(load(path,'file'))
 
 def readme():
     fl = f'{BACKEND_DIR}README.md'
+    path = os.path.join(os. getcwd(), fl)
     try:
-        with open(fl, "r", encoding="utf-8") as file:
+        with open(path, "r", encoding="utf-8") as file:
             readme_content = file.read()
         print("JF: FOUND README...")
         return readme_content
