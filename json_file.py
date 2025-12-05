@@ -1,10 +1,7 @@
 import json
-from os import getenv
-from dotenv import load_dotenv
+import os
 
-load_dotenv()
-
-WORKING_DIR = getenv('WORKING_DIR','public')
+WORKING_DIR = os.environ.get('WORKING_DIR','public')
 
 def load(fl,t='file'):
     if t=='file':

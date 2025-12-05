@@ -12,8 +12,8 @@ except (TypeError, AttributeError):
     VERBOSE = True
     ui.navigate.to('/no-lead')
 
-ENVIRONMENT = os.getenv('ENVIRONMENT','local')
-WORKING_DIR = os.getenv('WORKING_DIR','public')
+ENVIRONMENT = os.environ.get('ENVIRONMENT','local')
+WORKING_DIR = os.environ.get('WORKING_DIR','public')
 
 TITLE = 'YouTube Recycle Bin'
 
