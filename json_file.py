@@ -1,7 +1,7 @@
 import json
 import os
 
-WORKING_DIR = os.environ.get('WORKING_DIR','public/')
+BACKEND_DIR = os.environ.get('BACKEND_DIR','docs/')
 
 def load(fl,t='file'):
     if t=='file':
@@ -18,15 +18,16 @@ def load(fl,t='file'):
     else:
         return json.loads(fl)
     
-def save(fl,ti=f'{WORKING_DIR}result'):
+def save(fl,ti=f'{BACKEND_DIR}result'):
     with open(ti+'.json', "w") as file:
         json.dump(fl, file, indent=4)
 
 def leads():
-    return(load(f'{WORKING_DIR}leads.json','file'))
+    print("JF: CURRENT DIR: "+ os. getcwd())
+    return(load(f'{BACKEND_DIR}leads.json','file'))
 
 def readme():
-    fl = f'{WORKING_DIR}README.md'
+    fl = f'{BACKEND_DIR}README.md'
     try:
         with open(fl, "r", encoding="utf-8") as file:
             readme_content = file.read()
