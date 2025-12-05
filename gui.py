@@ -1,6 +1,5 @@
 import config, os, search_parse, search_youtube, json_file, device_info
 from nicegui import app, ui, run
-from dotenv import load_dotenv
 from contextlib import contextmanager
 
 
@@ -13,7 +12,6 @@ except (TypeError, AttributeError):
     VERBOSE = True
     ui.navigate.to('/no-lead')
 
-load_dotenv()
 ENVIRONMENT = os.getenv('ENVIRONMENT','local')
 WORKING_DIR = os.getenv('WORKING_DIR','public')
 
