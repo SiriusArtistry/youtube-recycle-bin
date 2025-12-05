@@ -353,7 +353,7 @@ def about_page():
 
 if VERBOSE: print(f'GUI: Running in environment \'{ENVIRONMENT}\'')
 if not ENVIRONMENT == 'local':
-    app.add_static_files(f"/{WORKING_DIR}", f"{WORKING_DIR}")
     ui.run_with(app,title=TITLE,favicon=f'/{WORKING_DIR}/favicon.ico',storage_secret=TITLE)
 else:
+    app.add_static_files(f"/{WORKING_DIR}", f"{WORKING_DIR}")
     ui.run(title=TITLE,storage_secret=TITLE)
