@@ -1,7 +1,7 @@
 import config, os, search_parse, search_youtube, json_file, device_info
-from nicegui import app, ui, run
+from nicegui import app as nicegui_app, ui, run
 from contextlib import contextmanager
-
+from fastapi import FastAPI
 
 print('\n'*20)
 print('*'*40+'\nGUI: STARTING APPLICATION...\n'+'*'*40)
@@ -17,8 +17,10 @@ WORKING_DIR = os.environ.get('WORKING_DIR','public/')
 
 TITLE = 'YouTube Recycle Bin'
 
-@app.on_page_exception
-def timeout_error_page(exception: Exception) -> None:
+app = FastAPI()
+
+@nicegui_app.on_page_exception
+def error_page(exception: Exception) -> None:
     common_header()
     gui_style()
     with ui.column().classes('absolute-center items-center gap-8 w-auto'):
@@ -43,11 +45,16 @@ def raise_ratelimit_error():
 @ui.page('/search-error')
 def raise_search_error():
     gui_style()
-    if 'params' not in app.storage.user or not app.storage.user['params']['st']:
+    if 'params' not in nicegui_app.storage.user or not nicegui_app.storage.user['params']['st']:
         gui_init()
-        raise TypeError(f'Had trouble using lead \'{app.storage.user['lead']}\'...')
+        raise TypeError(f'Had trouble using lead \'{nicegui_app.storage.user['lead']}\'...')
     else:
         ui.navigate.to('/')
+
+@ui.page('/404')
+def not_found_page():
+    gui_style()
+    common_header()
 
 @contextmanager
 def disable(button: ui.button):
@@ -65,13 +72,13 @@ def gui_style():
 def gui_init():
     if config.lds:
         if VERBOSE: print("GUI: FOUND LEADS...")
-        if 'results'    not in app.storage.user: app.storage.user['results'] = False
-        if 'last_search'not in app.storage.user: app.storage.user['last_search'] = [0,"",0]
-        if 'cat'        not in app.storage.user: app.storage.user['cat']     = 'old'
-        if 'lvt'        not in app.storage.user: app.storage.user['lvt']     = 100
-        app.storage.user['lead'], app.storage.user['params'] = search_parse.randomize_lead(app.storage.user['cat'])
-        app.storage.user['allow_try_again'], app.storage.user['allow_search'], app.storage.user['cat_lock'] = True, True, True
-        app.storage.user['lead_lock'] = False
+        if 'results'    not in nicegui_app.storage.user: nicegui_app.storage.user['results'] = False
+        if 'last_search'not in nicegui_app.storage.user: nicegui_app.storage.user['last_search'] = [0,"",0]
+        if 'cat'        not in nicegui_app.storage.user: nicegui_app.storage.user['cat']     = 'old'
+        if 'lvt'        not in nicegui_app.storage.user: nicegui_app.storage.user['lvt']     = 100
+        nicegui_app.storage.user['lead'], nicegui_app.storage.user['params'] = search_parse.randomize_lead(nicegui_app.storage.user['cat'])
+        nicegui_app.storage.user['allow_try_again'], nicegui_app.storage.user['allow_search'], nicegui_app.storage.user['cat_lock'] = True, True, True
+        nicegui_app.storage.user['lead_lock'] = False
     else:
         ui.navigate.to('/no-lead')
 
@@ -100,12 +107,12 @@ def set_icon_button(button_element,state):
         button_element.set_icon('lock_open')
 
 def lock_cat(button_element):
-    app.storage.user['cat_lock'] = not app.storage.user['cat_lock']
-    set_icon_button(button_element,app.storage.user['cat_lock'])
+    nicegui_app.storage.user['cat_lock'] = not nicegui_app.storage.user['cat_lock']
+    set_icon_button(button_element,nicegui_app.storage.user['cat_lock'])
 
 def lock_lead(button_element):
-    app.storage.user['lead_lock'] = not app.storage.user['lead_lock']
-    set_icon_button(button_element,app.storage.user['lead_lock'])
+    nicegui_app.storage.user['lead_lock'] = not nicegui_app.storage.user['lead_lock']
+    set_icon_button(button_element,nicegui_app.storage.user['lead_lock'])
 
 def common_header():
     global main_header
@@ -146,7 +153,7 @@ def common_header():
 @ui.page('/')
 def main_page():
     if VERBOSE: print('.'*40+'\nGUI: MAIN PAGE')
-    if VERBOSE: print(f'USER: {app.storage.browser['id']}')
+    if VERBOSE: print(f'USER: {nicegui_app.storage.browser['id']}')
     gui_style()
     gui_init()
     common_header()
@@ -154,43 +161,43 @@ def main_page():
     @ui.refreshable
     def gui_lead_header():
         global lead_lock_btn
-        app.storage.user['allow_try_again'] = True
+        nicegui_app.storage.user['allow_try_again'] = True
         with ui.button(icon='lock_open', on_click=lambda: lock_lead(lead_lock_btn)).props('flat color=white') as lead_lock_btn:
             ui.tooltip('Lock Lead').props('delay="1000"')
-        with ui.select(label='Lead',options=list(config.lds[app.storage.user['cat']].keys()),\
-                    with_input=True,on_change=lambda: gui_lead_select()).bind_value(app.storage.user,'lead')\
+        with ui.select(label='Lead',options=list(config.lds[nicegui_app.storage.user['cat']].keys()),\
+                    with_input=True,on_change=lambda: gui_lead_select()).bind_value(nicegui_app.storage.user,'lead')\
                         .classes('w-500px text-white'):
             ui.tooltip('Lead').props('delay="1000"')
                 
         gui_update_params.refresh()
 
     def gui_lead_select():
-        app.storage.user['params'] = search_parse.lead_select(app.storage.user['cat'],app.storage.user['lead'])
+        nicegui_app.storage.user['params'] = search_parse.lead_select(nicegui_app.storage.user['cat'],nicegui_app.storage.user['lead'])
         gui_update_params.refresh()
 
     def gui_cat_select():
-        app.storage.user['lead'], app.storage.user['params'] = search_parse.cat_select(app.storage.user['cat'])
+        nicegui_app.storage.user['lead'], nicegui_app.storage.user['params'] = search_parse.cat_select(nicegui_app.storage.user['cat'])
         gui_lead_header.refresh()
 
     def get_params():
         try:
-            app.storage.user['params'] = search_parse.params(app.storage.user['cat'],app.storage.user['lead'])
+            nicegui_app.storage.user['params'] = search_parse.params(nicegui_app.storage.user['cat'],nicegui_app.storage.user['lead'])
         except (IndexError, TypeError):
             ui.navigate.to('/search-error')
         gui_update_params.refresh()
 
     @ui.refreshable
     def gui_update_params():
-        app.storage.user['params'] = search_parse.params(app.storage.user['cat'],app.storage.user['lead'])
-        if app.storage.user['params']['rh']:
-            for r in app.storage.user['params']['rh']:
+        nicegui_app.storage.user['params'] = search_parse.params(nicegui_app.storage.user['cat'],nicegui_app.storage.user['lead'])
+        if nicegui_app.storage.user['params']['rh']:
+            for r in nicegui_app.storage.user['params']['rh']:
                 ui.input(label='X'*len(r),value=r).classes('max-w-15').set_enabled(False)
 
-        if app.storage.user['params']['rn']:
+        if nicegui_app.storage.user['params']['rn']:
             i=0
-            for r in app.storage.user['params']['rn']:
-                if 'between' in app.storage.user['params']['prm']:
-                    b = app.storage.user['params']['prm']['between']
+            for r in nicegui_app.storage.user['params']['rn']:
+                if 'between' in nicegui_app.storage.user['params']['prm']:
+                    b = nicegui_app.storage.user['params']['prm']['between']
                     if any(isinstance(el, list) for el in b):
                         A = b[i][0]
                         B = b[i][1]
@@ -205,37 +212,37 @@ def main_page():
                 ui.number(label='X'*len(r),value=r,min=rmin,max=rmax)\
                     .classes('max-w-15').set_enabled(False)
 
-        if app.storage.user['params']['date_eval'][0]:
-            date_picker = app.storage.user['params']['date_eval'][1]
-            if 'after' in app.storage.user['params']['prm']:
-                date_after = f' (after {app.storage.user['params']['prm']['after']})'
+        if nicegui_app.storage.user['params']['date_eval'][0]:
+            date_picker = nicegui_app.storage.user['params']['date_eval'][1]
+            if 'after' in nicegui_app.storage.user['params']['prm']:
+                date_after = f' (after {nicegui_app.storage.user['params']['prm']['after']})'
             else:
                 date_after = ''
             ui.date_input(label=f'Date{date_after}', value=date_picker)\
                 .classes('w-auto max-w-38').set_enabled(False)\
             # .bind_value_from(date_picker)
 
-        if app.storage.user['params']['time_eval'][0]:
-            time_picker = app.storage.user['params']['time_eval'][1]
+        if nicegui_app.storage.user['params']['time_eval'][0]:
+            time_picker = nicegui_app.storage.user['params']['time_eval'][1]
             ui.time_input(label='Time', value=time_picker).classes('max-w-32').set_enabled(False)
                 # .bind_value_from(time_picker)\
     
     @ui.refreshable
     def gui_searched_term():
-        if int(app.storage.user['last_search'][0])>0:
+        if int(nicegui_app.storage.user['last_search'][0])>0:
             with ui.row().classes(replace='row items-center w-[100%] no-wrap').style('margin: 0; padding: 0; display: flex;'):
-                info = f'Found {app.storage.user['last_search'][0]} videos matching \'{app.storage.user['last_search'][1]}\' with less than {format(app.storage.user['last_search'][2],',')} views...\t'
+                info = f'Found {nicegui_app.storage.user['last_search'][0]} videos matching \'{nicegui_app.storage.user['last_search'][1]}\' with less than {format(nicegui_app.storage.user['last_search'][2],',')} views...\t'
                 info = info.replace('less than 0','no').replace('1 videos', '1 video')
                 ui.label(info)
                 ui.space()
-                YouTubeLink(app.storage.user['last_search'][1])
+                YouTubeLink(nicegui_app.storage.user['last_search'][1])
     
     @ui.refreshable
     def gui_load_cards():
         global try_again_row
-        if app.storage.user['results'] and isinstance(app.storage.user['results'],list):
+        if nicegui_app.storage.user['results'] and isinstance(nicegui_app.storage.user['results'],list):
             if VERBOSE: print(f"GUI: FETCHING RESULTS...")
-            for result in app.storage.user['results']:
+            for result in nicegui_app.storage.user['results']:
                 if result['thumbnails']:
                     tmb = result['thumbnails'][0]
                 ti = result['title']
@@ -257,7 +264,7 @@ def main_page():
                             ui.label(ch).classes('text-accent')
                             ui.label(ds)
         else:
-            if app.storage.user['results'] == False or not isinstance(app.storage.user['results'],list):
+            if nicegui_app.storage.user['results'] == False or not isinstance(nicegui_app.storage.user['results'],list):
                 if VERBOSE: print(f"GUI: NO RESULTS, NEW INSTANCE...")
                 with ui.column().classes('absolute-center w-3/4'):
                     ui.space()
@@ -269,47 +276,47 @@ def main_page():
                     ui.space()
                     ui.icon('help_outline', size='xl').style('color: gray')
                     with ui.row(wrap=False):
-                        info = f'Nothing here for \'{app.storage.user['last_search'][1]}\' with less than {format(app.storage.user['last_search'][2],',')} views...\t'
+                        info = f'Nothing here for \'{nicegui_app.storage.user['last_search'][1]}\' with less than {format(nicegui_app.storage.user['last_search'][2],',')} views...\t'
                         info = info.replace('less than 0','no').replace('1 videos', '1 video')
                         ui.label(info).style('color: gray').classes('w-3/5 justify-center')
                         ui.space()
-                        YouTubeLink(app.storage.user['last_search'][1])
+                        YouTubeLink(nicegui_app.storage.user['last_search'][1])
                     with ui.row() as try_again_row:
-                        ui.button('Try Again',on_click=lambda e: gui_try_again(e.sender)).classes('w-40px justify-self-center').set_enabled(app.storage.user['allow_try_again'])
+                        ui.button('Try Again',on_click=lambda e: gui_try_again(e.sender)).classes('w-40px justify-self-center').set_enabled(nicegui_app.storage.user['allow_try_again'])
 
     async def gui_search_youtube(button: ui.button) -> None:
         with disable(button):
             try:
-                app.storage.user['results'] = await run.cpu_bound(search_youtube.search,app.storage.user['cat'], app.storage.user['params']['st'], app.storage.user['lvt'])
+                nicegui_app.storage.user['results'] = await run.cpu_bound(search_youtube.search,nicegui_app.storage.user['cat'], nicegui_app.storage.user['params']['st'], nicegui_app.storage.user['lvt'])
             except (ConnectionError, KeyError):
                 ui.navigate.to('/rate-limit')
             gui_load_cards.refresh()
-            app.storage.user['last_search'] = [len(app.storage.user['results']),app.storage.user['params']['st'],int(app.storage.user['lvt'])]
+            nicegui_app.storage.user['last_search'] = [len(nicegui_app.storage.user['results']),nicegui_app.storage.user['params']['st'],int(nicegui_app.storage.user['lvt'])]
             gui_searched_term.refresh()
 
     async def gui_try_again(button: ui.button) -> list:
         global try_again_row
-        app.storage.user['allow_try_again'] = False
+        nicegui_app.storage.user['allow_try_again'] = False
         with disable(button):
             with try_again_row:
                 ui.spinner(size='lg', color='accent')
             try:
-                app.storage.user['results'] = await run.cpu_bound(search_youtube.try_again,app.storage.user['cat'], app.storage.user['params']['st'], app.storage.user['lvt'])
+                nicegui_app.storage.user['results'] = await run.cpu_bound(search_youtube.try_again,nicegui_app.storage.user['cat'], nicegui_app.storage.user['params']['st'], nicegui_app.storage.user['lvt'])
             except (ConnectionError, KeyError):
                 ui.navigate.to('/rate-limit')
-            app.storage.user['last_search'] = [len(app.storage.user['results']),app.storage.user['params']['st'],int(app.storage.user['lvt'])]
+            nicegui_app.storage.user['last_search'] = [len(nicegui_app.storage.user['results']),nicegui_app.storage.user['params']['st'],int(nicegui_app.storage.user['lvt'])]
             gui_load_cards.refresh()
 
     def gui_randomize():
-        app.storage.user['allow_try_again'] = True
+        nicegui_app.storage.user['allow_try_again'] = True
         if VERBOSE: print('?'*40+'\nGUI: RANDOMIZING...')
-        if not app.storage.user['cat_lock']:
-            app.storage.user['lead_lock'] = False
-            app.storage.user['cat'], app.storage.user['lead'], app.storage.user['params'] = search_parse.randomize_cat()
+        if not nicegui_app.storage.user['cat_lock']:
+            nicegui_app.storage.user['lead_lock'] = False
+            nicegui_app.storage.user['cat'], nicegui_app.storage.user['lead'], nicegui_app.storage.user['params'] = search_parse.randomize_cat()
             gui_lead_header.refresh()
         else:
-            if not app.storage.user['lead_lock']:
-                app.storage.user['lead'], app.storage.user['params'] = search_parse.randomize_lead(app.storage.user['cat'])
+            if not nicegui_app.storage.user['lead_lock']:
+                nicegui_app.storage.user['lead'], nicegui_app.storage.user['params'] = search_parse.randomize_lead(nicegui_app.storage.user['cat'])
                 gui_lead_header.refresh()
             else:
                 get_params()
@@ -319,7 +326,7 @@ def main_page():
             ui.tooltip('Randomize').props('delay="1000"')
         with ui.button(icon='lock', on_click=lambda: lock_cat(cat_lock_btn)).props('flat color=white') as cat_lock_btn:
             ui.tooltip('Lock Category').props('delay="1000"')
-        with ui.select(options=list(config.cats),on_change=lambda: gui_cat_select()).bind_value(app.storage.user,'cat'):
+        with ui.select(options=list(config.cats),on_change=lambda: gui_cat_select()).bind_value(nicegui_app.storage.user,'cat'):
             ui.tooltip('Category').props('delay="1000"')
         
         gui_lead_header()
@@ -327,7 +334,7 @@ def main_page():
         gui_update_params()
 
         ui.space()
-        with ui.number(label='Views',value=app.storage.user['lvt'],precision=0,min=0).bind_value(app.storage.user,'lvt').classes('max-w-15 disable-scrollbars'):
+        with ui.number(label='Views',value=nicegui_app.storage.user['lvt'],precision=0,min=0).bind_value(nicegui_app.storage.user,'lvt').classes('max-w-15 disable-scrollbars'):
             ui.tooltip('Max Viewcount').props('delay="1000"')
         with ui.button(icon='search',on_click=lambda e:gui_search_youtube(e.sender)).props('flat color=accent') as search_btn:
             ui.tooltip('Search').props('delay="1000"')
@@ -336,6 +343,8 @@ def main_page():
 
     with ui.grid().classes('w-full').style('grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))'):
         gui_load_cards()
+
+    return {'Hello':'World'}
 
 @ui.page('/about')
 def about_page():
@@ -348,12 +357,15 @@ def about_page():
     with ui.column().classes('justify-center h-full'):
         ui.markdown(json_file.readme())
         ui.space()
-        ui.label(app.storage.browser['id']).style('color: gray')
+        ui.label(nicegui_app.storage.browser['id']).style('color: gray')
         ui.label(device_info.get_device_info()).style('color: gray')
 
 if VERBOSE: print(f'GUI: Running in environment \'{ENVIRONMENT}\'')
 if not ENVIRONMENT == 'local':
-    ui.run_with(app,title=TITLE,favicon=f'{WORKING_DIR}favicon.ico',storage_secret=TITLE)
+    @app.get('/')
+    def read_root():
+        return {'Hello': 'World'}
+    ui.run_with(app=app,title=TITLE,favicon=f'{WORKING_DIR}favicon.ico',storage_secret=TITLE)
 else:
-    app.add_static_files(f"/{WORKING_DIR}", f"{WORKING_DIR}")
+    nicegui_app.add_static_files(f"/{WORKING_DIR}", f"{WORKING_DIR}")
     ui.run(title=TITLE,storage_secret=TITLE)
