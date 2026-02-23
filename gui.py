@@ -287,7 +287,7 @@ def main_page():
     async def gui_search_youtube(button: ui.button) -> None:
         with disable(button):
             try:
-                nicegui_app.storage.user['results'] = await run.cpu_bound(search_youtube.search,nicegui_app.storage.user['cat'], nicegui_app.storage.user['params']['st'], nicegui_app.storage.user['lvt'])
+                nicegui_app.storage.user['results'] = search_youtube.search(nicegui_app.storage.user['cat'], nicegui_app.storage.user['params']['st'], nicegui_app.storage.user['lvt'])
             except (ConnectionError, KeyError):
                 ui.navigate.to('/rate-limit')
             gui_load_cards.refresh()
@@ -301,7 +301,7 @@ def main_page():
             with try_again_row:
                 ui.spinner(size='lg', color='accent')
             try:
-                nicegui_app.storage.user['results'] = await run.cpu_bound(search_youtube.try_again,nicegui_app.storage.user['cat'], nicegui_app.storage.user['params']['st'], nicegui_app.storage.user['lvt'])
+                nicegui_app.storage.user['results'] = search_youtube.try_again(nicegui_app.storage.user['cat'], nicegui_app.storage.user['params']['st'], nicegui_app.storage.user['lvt'])
             except (ConnectionError, KeyError):
                 ui.navigate.to('/rate-limit')
             nicegui_app.storage.user['last_search'] = [len(nicegui_app.storage.user['results']),nicegui_app.storage.user['params']['st'],int(nicegui_app.storage.user['lvt'])]
